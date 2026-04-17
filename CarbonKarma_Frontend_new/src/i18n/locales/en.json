@@ -1,0 +1,67 @@
+{
+  "app": { "title": "CarbonKarma", "subtitle": "dMRV Carbon Intelligence Platform" },
+  "nav": {
+    "dashboard": "Dashboard", "satellite": "Satellite", "fusion": "Fusion",
+    "awd": "AWD", "methane": "Methane", "verification": "Verification",
+    "credits": "Credits", "analytics": "Analytics", "ai": "AI Insights", "report": "Report"
+  },
+  "map": {
+    "drawFarm": "Draw Farm Boundary", "enterCoords": "Enter Coordinates",
+    "detectLocation": "Detect My Location", "lat": "Latitude", "lon": "Longitude",
+    "analyze": "Analyze Field", "searching": "Locating...", "clear": "Clear"
+  },
+  "satellite": {
+    "title": "Satellite Data", "sar": "SAR (Sentinel-1)", "ndvi": "NDVI (Sentinel-2)",
+    "temperature": "Temperature", "weather": "Weather", "opacity": "Opacity",
+    "waterProbability": "Water Probability", "ndviValue": "NDVI Value",
+    "cropHealth": "Crop Health", "rainfall": "Rainfall (mm)", "tempC": "Temp (°C)"
+  },
+  "fusion": {
+    "title": "Data Fusion", "pixelInsight": "Pixel Insight",
+    "waterLevel": "Water Level", "ndvi": "NDVI", "temperature": "Temperature",
+    "rainfall": "Rainfall", "soilMoisture": "Soil Moisture", "floodType": "Flood Type",
+    "awdStatus": "AWD Status", "clickMap": "Click on the map to inspect a pixel"
+  },
+  "awd": {
+    "title": "AWD Detection", "status": "AWD Status", "confidence": "Confidence",
+    "cycles": "Cycles Detected", "irrigationEvents": "Irrigation Events",
+    "rainEvents": "Rain Events", "active": "Active AWD", "conventional": "Conventional",
+    "uncertain": "Uncertain", "lstmSignal": "LSTM Signal"
+  },
+  "methane": {
+    "title": "Methane Analysis", "flux": "CH₄ Flux", "category": "Category",
+    "reduction": "Reduction vs Baseline", "seasonal": "Seasonal Total",
+    "baseline": "Baseline (CF)", "unit": "mg CH₄/m²/day", "kgHa": "kg CH₄/ha/season"
+  },
+  "verification": {
+    "title": "dMRV Verification", "status": "Status", "level": "Level",
+    "confidence": "Confidence", "dataIntegrity": "Data Integrity",
+    "explanation": "Explanation", "fingerprint": "Record Fingerprint",
+    "gold": "Gold", "silver": "Silver", "bronze": "Bronze", "failed": "Failed"
+  },
+  "credits": {
+    "title": "Carbon Credits", "earned": "Credits Earned", "balance": "Total Balance",
+    "usdValue": "USD Value", "history": "Transaction History", "retire": "Retire Credits",
+    "unit": "tCO₂e", "price": "Price/Credit"
+  },
+  "analytics": {
+    "title": "Analytics Dashboard", "farmScore": "Farm Score", "waterEfficiency": "Water Efficiency",
+    "methaneControl": "Methane Control", "awdCompliance": "AWD Compliance",
+    "comparative": "Comparative Analysis", "trends": "Historical Trends",
+    "alerts": "Alerts & Insights", "predictions": "7-Day Predictions",
+    "segmentation": "Field Segmentation", "impact": "Impact Metrics",
+    "profile": "Farm Profile", "audit": "Audit Trail",
+    "days7": "7 Days", "days30": "30 Days", "days90": "90 Days"
+  },
+  "ai": {
+    "title": "AI Insights", "query": "Ask about your farm...", "send": "Ask",
+    "explanation": "Verification Explanation", "alerts": "Alert Analysis",
+    "certificate": "Certificate Text", "source": "Source"
+  },
+  "report": { "title": "Download Report", "generate": "Generate PDF Report", "download": "Download" },
+  "common": {
+    "loading": "Loading...", "error": "Error", "retry": "Retry", "fallback": "Demo Data",
+    "steps": "Steps", "days": "Days", "ha": "ha", "grade": "Grade",
+    "noData": "No data available", "updated": "Updated"
+  }
+}

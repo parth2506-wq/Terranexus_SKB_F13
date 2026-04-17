@@ -1,0 +1,67 @@
+{
+  "app": { "title": "कार्बनकर्मा", "subtitle": "dMRV कार्बन इंटेलिजेंस प्लेटफ़ॉर्म" },
+  "nav": {
+    "dashboard": "डैशबोर्ड", "satellite": "सैटेलाइट", "fusion": "फ्यूजन",
+    "awd": "AWD", "methane": "मीथेन", "verification": "सत्यापन",
+    "credits": "क्रेडिट", "analytics": "विश्लेषण", "ai": "AI अंतर्दृष्टि", "report": "रिपोर्ट"
+  },
+  "map": {
+    "drawFarm": "खेत की सीमा खींचें", "enterCoords": "निर्देशांक दर्ज करें",
+    "detectLocation": "मेरा स्थान पहचानें", "lat": "अक्षांश", "lon": "देशांतर",
+    "analyze": "क्षेत्र का विश्लेषण करें", "searching": "खोज रहे हैं...", "clear": "साफ़ करें"
+  },
+  "satellite": {
+    "title": "सैटेलाइट डेटा", "sar": "SAR (Sentinel-1)", "ndvi": "NDVI (Sentinel-2)",
+    "temperature": "तापमान", "weather": "मौसम", "opacity": "पारदर्शिता",
+    "waterProbability": "जल संभावना", "ndviValue": "NDVI मान",
+    "cropHealth": "फसल स्वास्थ्य", "rainfall": "वर्षा (मिमी)", "tempC": "तापमान (°C)"
+  },
+  "fusion": {
+    "title": "डेटा फ्यूजन", "pixelInsight": "पिक्सेल जानकारी",
+    "waterLevel": "जल स्तर", "ndvi": "NDVI", "temperature": "तापमान",
+    "rainfall": "वर्षा", "soilMoisture": "मिट्टी की नमी", "floodType": "बाढ़ प्रकार",
+    "awdStatus": "AWD स्थिति", "clickMap": "पिक्सेल देखने के लिए नक्शे पर क्लिक करें"
+  },
+  "awd": {
+    "title": "AWD पहचान", "status": "AWD स्थिति", "confidence": "विश्वास",
+    "cycles": "चक्र पहचाने गए", "irrigationEvents": "सिंचाई घटनाएं",
+    "rainEvents": "वर्षा घटनाएं", "active": "सक्रिय AWD", "conventional": "पारंपरिक",
+    "uncertain": "अनिश्चित", "lstmSignal": "LSTM संकेत"
+  },
+  "methane": {
+    "title": "मीथेन विश्लेषण", "flux": "CH₄ प्रवाह", "category": "श्रेणी",
+    "reduction": "बेसलाइन से कमी", "seasonal": "मौसमी कुल",
+    "baseline": "बेसलाइन (CF)", "unit": "mg CH₄/m²/दिन", "kgHa": "kg CH₄/ha/मौसम"
+  },
+  "verification": {
+    "title": "dMRV सत्यापन", "status": "स्थिति", "level": "स्तर",
+    "confidence": "विश्वास", "dataIntegrity": "डेटा अखंडता",
+    "explanation": "स्पष्टीकरण", "fingerprint": "रिकॉर्ड फिंगरप्रिंट",
+    "gold": "स्वर्ण", "silver": "रजत", "bronze": "कांस्य", "failed": "विफल"
+  },
+  "credits": {
+    "title": "कार्बन क्रेडिट", "earned": "अर्जित क्रेडिट", "balance": "कुल शेष",
+    "usdValue": "USD मूल्य", "history": "लेनदेन इतिहास", "retire": "क्रेडिट रिटायर करें",
+    "unit": "tCO₂e", "price": "क्रेडिट/मूल्य"
+  },
+  "analytics": {
+    "title": "विश्लेषण डैशबोर्ड", "farmScore": "फार्म स्कोर", "waterEfficiency": "जल दक्षता",
+    "methaneControl": "मीथेन नियंत्रण", "awdCompliance": "AWD अनुपालन",
+    "comparative": "तुलनात्मक विश्लेषण", "trends": "ऐतिहासिक रुझान",
+    "alerts": "अलर्ट और अंतर्दृष्टि", "predictions": "7-दिन पूर्वानुमान",
+    "segmentation": "फील्ड विभाजन", "impact": "प्रभाव मेट्रिक्स",
+    "profile": "फार्म प्रोफाइल", "audit": "ऑडिट ट्रेल",
+    "days7": "7 दिन", "days30": "30 दिन", "days90": "90 दिन"
+  },
+  "ai": {
+    "title": "AI अंतर्दृष्टि", "query": "अपने खेत के बारे में पूछें...", "send": "पूछें",
+    "explanation": "सत्यापन स्पष्टीकरण", "alerts": "अलर्ट विश्लेषण",
+    "certificate": "प्रमाणपत्र पाठ", "source": "स्रोत"
+  },
+  "report": { "title": "रिपोर्ट डाउनलोड", "generate": "PDF रिपोर्ट बनाएं", "download": "डाउनलोड" },
+  "common": {
+    "loading": "लोड हो रहा है...", "error": "त्रुटि", "retry": "पुनः प्रयास", "fallback": "डेमो डेटा",
+    "steps": "चरण", "days": "दिन", "ha": "हे", "grade": "ग्रेड",
+    "noData": "कोई डेटा उपलब्ध नहीं", "updated": "अपडेट किया"
+  }
+}
