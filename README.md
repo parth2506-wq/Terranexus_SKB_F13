@@ -1,10 +1,11 @@
 # Terranexus_SKB_F13
 Sankalp Bharat Hackathon, SVPCOE, Nagpur
-# 🌍 TerraNexus — dMRV Carbon Intelligence Engine
+# 🌍 CarbonKarma — dMRV Carbon Intelligence Engine
+      -by team terranexus
 
 ## 🚀 Overview
 
-**TerraNexus** is an AI-powered, multi-modal **digital Monitoring, Reporting, and Verification (dMRV)** platform designed to transform carbon governance in agriculture.
+**CarbonKarma** is an AI-powered, multi-modal **digital Monitoring, Reporting, and Verification (dMRV)** platform designed to transform carbon governance in agriculture.
 
 The system leverages **satellite data fusion**, **deep learning**, and **weather intelligence** to provide **cloud-proof monitoring**, **methane emission estimation**, and **trust-based carbon credit verification** at the farm level.
 
