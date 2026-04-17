@@ -1,0 +1,19 @@
+# CarbonKarma Part 1 — Python dependencies
+# All versions tested; torch/shapely optional (numpy fallbacks exist)
+
+flask>=3.0.0
+numpy>=1.24.0
+pandas>=2.0.0
+opencv-python-headless>=4.8.0
+requests>=2.31.0
+python-dotenv>=1.0.0
+scipy>=1.11.0
+Pillow>=10.0.0
+geojson>=3.0.0
+
+# Optional — system falls back to numpy if unavailable
+torch>=2.0.0
+shapely>=2.0.0
+
+# Optional — CORS without this is handled manually in app.py
+# flask-cors>=4.0.0
