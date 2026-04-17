@@ -15,9 +15,11 @@ except ImportError:
 
 LocationDict = Dict[str, Any]
 
-def parse_location(lat=None, lon=None, geojson=None) -> LocationDict:
+def parse_location(lat=None, lon=None, geojson=None, **kwargs) -> LocationDict:
     if geojson is not None:
         return _parse_geojson(geojson)
+    # Check for lng if lon is missing
+    lon = lon if lon is not None else kwargs.get("lng")
     if lat is not None and lon is not None:
         return {
             "lat": float(lat), "lon": float(lon),

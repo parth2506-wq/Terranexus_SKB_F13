@@ -31,10 +31,10 @@ llm_bp = Blueprint("llm", __name__)
 def _run_p1_mini(body: dict) -> tuple:
     """Run Part 1 with minimal steps for LLM context gathering."""
     lat     = body.get("lat")
-    lon     = body.get("lon")
+    lon     = body.get("lon") if body.get("lon") is not None else body.get("lng")
     geojson = body.get("geojson")
     if lat is None and lon is None and geojson is None:
-        return None, jsonify({"error": "Provide lat+lon or geojson"}), 400
+        return None, jsonify({"error": "Provide lat+lon (or lng) or geojson"}), 400
     try:
         lat = float(lat) if lat is not None else None
         lon = float(lon) if lon is not None else None

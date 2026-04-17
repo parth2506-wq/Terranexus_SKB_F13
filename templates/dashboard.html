@@ -1,0 +1,2466 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CarbonKarma · dMRV Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Space+Grotesk:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --green-50: #f0faf4;
+      --green-100: #d4f0e1;
+      --green-200: #a8e0c0;
+      --green-400: #3db877;
+      --green-500: #2a9a5e;
+      --green-600: #1e7a47;
+      --green-800: #0d4a28;
+      --teal-50: #e8faf7;
+      --teal-200: #8eddd0;
+      --teal-400: #1db8a6;
+      --teal-600: #0d8a7c;
+      --amber-50: #fffbeb;
+      --amber-200: #fde68a;
+      --amber-400: #f59e0b;
+      --amber-600: #b45309;
+      --sky-50: #f0f9ff;
+      --sky-200: #bae6fd;
+      --sky-400: #38bdf8;
+      --sky-600: #0284c7;
+      --red-400: #f87171;
+      --red-600: #dc2626;
+      --white: #ffffff;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-400: #9ca3af;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+      --font-main: 'DM Sans', sans-serif;
+      --font-accent: 'Space Grotesk', sans-serif;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, .08), 0 1px 2px rgba(0, 0, 0, .06);
+      --r-sm: 8px;
+      --r-md: 12px;
+      --r-lg: 16px;
+      --r-xl: 20px;
+
+      /* ── API BASE URL – change this to your Flask server ── */
+      --api-base: 'http://127.0.0.1:5000';
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    body {
+      font-family: var(--font-main);
+      background: var(--green-50);
+      color: var(--gray-800);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column
+    }
+
+    /* ── TOAST ─────────────────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px
+    }
+
+    .toast-item {
+      padding: 10px 16px;
+      border-radius: var(--r-sm);
+      font-size: 13px;
+      font-weight: 500;
+      color: #fff;
+      max-width: 320px;
+      animation: slideIn .25s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, .15)
+    }
+
+    .toast-item.success {
+      background: var(--green-600)
+    }
+
+    .toast-item.error {
+      background: var(--red-600)
+    }
+
+    .toast-item.info {
+      background: var(--sky-600)
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(20px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0)
+      }
+    }
+
+    /* ── API STATUS BAR ─────────────────────────────── */
+    .api-bar {
+      background: var(--gray-800);
+      color: #fff;
+      font-size: 11px;
+      font-family: monospace;
+      padding: 3px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0
+    }
+
+    .api-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--gray-400)
+    }
+
+    .api-dot.ok {
+      background: #4ade80
+    }
+
+    .api-dot.err {
+      background: var(--red-400)
+    }
+
+    .api-endpoint {
+      opacity: .6
+    }
+
+    .api-status-text {
+      margin-left: auto;
+      opacity: .7
+    }
+
+    /* ── TOP NAV ─────────────────────────────────────── */
+    .topnav {
+      background: var(--white);
+      border-bottom: 1.5px solid var(--green-100);
+      padding: 0 20px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-shrink: 0;
+      box-shadow: var(--shadow-sm);
+      z-index: 100
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-accent);
+      font-weight: 600;
+      font-size: 17px;
+      color: var(--green-600);
+      text-decoration: none;
+      flex-shrink: 0
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--green-400), var(--teal-400));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 2px;
+      flex: 1
+    }
+
+    .nav-tab {
+      padding: 6px 14px;
+      border-radius: var(--r-sm);
+      font-size: 13.5px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--gray-600);
+      transition: all .2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-main)
+    }
+
+    .nav-tab:hover {
+      background: var(--green-50);
+      color: var(--green-600)
+    }
+
+    .nav-tab.active {
+      background: var(--green-100);
+      color: var(--green-600)
+    }
+
+    .tab-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: .6
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--green-100);
+      color: var(--green-600);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12.5px;
+      font-weight: 500
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green-400);
+      animation: pulse 1.8s ease-in-out infinite
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1)
+      }
+
+      50% {
+        opacity: .5;
+        transform: scale(.8)
+      }
+    }
+
+    .btn-primary {
+      background: var(--green-500);
+      color: #fff;
+      border: none;
+      padding: 7px 14px;
+      border-radius: var(--r-sm);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: var(--font-main);
+      transition: all .2s
+    }
+
+    .btn-primary:hover {
+      background: var(--green-600)
+    }
+
+    .btn-primary:disabled {
+      background: var(--gray-400);
+      cursor: not-allowed
+    }
+
+    /* ── MAIN LAYOUT ─────────────────────────────────── */
+    .main-layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden
+    }
+
+    /* ── LEFT PANEL ──────────────────────────────────── */
+    .left-panel {
+      width: 300px;
+      flex-shrink: 0;
+      background: var(--white);
+      border-right: 1.5px solid var(--green-100);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto
+    }
+
+    .panel-section {
+      padding: 16px;
+      border-bottom: 1px solid var(--gray-100)
+    }
+
+    .section-label {
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--gray-400);
+      margin-bottom: 10px
+    }
+
+    .farm-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px
+    }
+
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--gray-50);
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--r-sm);
+      padding: 8px 10px;
+      cursor: pointer;
+      transition: all .2s
+    }
+
+    .input-row:hover {
+      border-color: var(--green-400);
+      background: var(--green-50)
+    }
+
+    .input-row.active {
+      border-color: var(--green-500);
+      background: var(--green-50)
+    }
+
+    .input-row-icon {
+      font-size: 15px
+    }
+
+    .input-row-text {
+      flex: 1
+    }
+
+    .input-row-label {
+      font-size: 11px;
+      color: var(--gray-400)
+    }
+
+    .input-row-value {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--gray-700)
+    }
+
+    .coord-inputs {
+      display: flex;
+      gap: 6px
+    }
+
+    .coord-input {
+      flex: 1;
+      background: var(--gray-50);
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--r-sm);
+      padding: 7px 10px;
+      font-size: 13px;
+      font-family: var(--font-main);
+      outline: none;
+      color: var(--gray-800);
+      transition: border-color .2s
+    }
+
+    .coord-input:focus {
+      border-color: var(--green-400);
+      background: var(--green-50)
+    }
+
+    .time-range-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap
+    }
+
+    .time-chip {
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1.5px solid var(--gray-200);
+      background: var(--white);
+      color: var(--gray-600);
+      transition: all .2s;
+      font-family: var(--font-main)
+    }
+
+    .time-chip:hover {
+      border-color: var(--green-400);
+      color: var(--green-600)
+    }
+
+    .time-chip.active {
+      border-color: var(--green-500);
+      background: var(--green-500);
+      color: #fff
+    }
+
+    .run-btn {
+      width: 100%;
+      padding: 11px;
+      background: linear-gradient(135deg, var(--green-500), var(--teal-400));
+      border: none;
+      border-radius: var(--r-sm);
+      color: #fff;
+      font-family: var(--font-accent);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 4px;
+      transition: all .2s;
+      letter-spacing: .01em;
+      position: relative
+    }
+
+    .run-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(61, 184, 119, .4)
+    }
+
+    .run-btn:disabled {
+      background: var(--gray-400);
+      cursor: not-allowed;
+      transform: none
+    }
+
+    .run-btn .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255, 255, 255, .4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    /* ── LAYER TOGGLES ───────────────────────────────── */
+    .layer-toggles {
+      display: flex;
+      flex-direction: column;
+      gap: 8px
+    }
+
+    .layer-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--r-sm);
+      border: 1.5px solid transparent;
+      cursor: pointer;
+      transition: all .2s
+    }
+
+    .layer-toggle:hover {
+      background: var(--gray-50)
+    }
+
+    .layer-toggle.on {
+      border-color: var(--layer-color, var(--green-200));
+      background: var(--layer-bg, var(--green-50))
+    }
+
+    .layer-swatch {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--r-sm);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px
+    }
+
+    .layer-info {
+      flex: 1
+    }
+
+    .layer-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--gray-700)
+    }
+
+    .layer-sub {
+      font-size: 11px;
+      color: var(--gray-400);
+      margin-top: 1px
+    }
+
+    .toggle-switch {
+      width: 34px;
+      height: 19px;
+      border-radius: 10px;
+      background: var(--gray-200);
+      position: relative;
+      flex-shrink: 0;
+      transition: background .2s
+    }
+
+    .toggle-switch.on {
+      background: var(--green-400)
+    }
+
+    .toggle-thumb {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: #fff;
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      transition: transform .2s;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .2)
+    }
+
+    .toggle-switch.on .toggle-thumb {
+      transform: translateX(15px)
+    }
+
+    .layer-toggle.loading .layer-swatch {
+      animation: pulse 1s infinite
+    }
+
+    /* ── METRIC CARDS ────────────────────────────────── */
+    .metric-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px
+    }
+
+    .metric-card {
+      background: var(--card-bg, var(--gray-50));
+      border-radius: var(--r-sm);
+      padding: 10px 12px;
+      border: 1.5px solid var(--card-border, var(--gray-200));
+      transition: all .3s
+    }
+
+    .metric-label {
+      font-size: 10.5px;
+      color: var(--gray-400);
+      font-weight: 500;
+      letter-spacing: .04em;
+      text-transform: uppercase
+    }
+
+    .metric-value {
+      font-size: 20px;
+      font-weight: 600;
+      font-family: var(--font-accent);
+      margin-top: 2px;
+      color: var(--card-color, var(--gray-800))
+    }
+
+    .metric-sub {
+      font-size: 11px;
+      color: var(--gray-400);
+      margin-top: 1px
+    }
+
+    .metric-card.refreshing .metric-value {
+      opacity: .4
+    }
+
+    /* ── MAP AREA ────────────────────────────────────── */
+    .map-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative
+    }
+
+    #main-map {
+      flex: 1;
+      width: 100%;
+      position: relative;
+      z-index: 1
+    }
+
+    .map-overlay-controls {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px
+    }
+
+    .map-ctrl-btn {
+      background: var(--white);
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--r-sm);
+      padding: 8px 12px;
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-main);
+      color: var(--gray-700);
+      box-shadow: var(--shadow-sm);
+      transition: all .2s
+    }
+
+    .map-ctrl-btn:hover {
+      border-color: var(--green-400);
+      background: var(--green-50);
+      color: var(--green-600)
+    }
+
+    .map-ctrl-btn.active {
+      border-color: var(--green-500);
+      background: var(--green-100);
+      color: var(--green-600)
+    }
+
+    .satellite-indicator {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      z-index: 1000;
+      background: rgba(0, 0, 0, .72);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 11.5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      backdrop-filter: blur(4px)
+    }
+
+    .sat-live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #4ade80;
+      animation: pulse 1.5s infinite
+    }
+
+    /* ── RIGHT PANEL ─────────────────────────────────── */
+    .right-panel {
+      width: 340px;
+      flex-shrink: 0;
+      background: var(--white);
+      border-left: 1.5px solid var(--green-100);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden
+    }
+
+    .panel-tabs {
+      display: flex;
+      border-bottom: 1.5px solid var(--gray-100);
+      padding: 0 8px
+    }
+
+    .panel-tab {
+      padding: 12px 10px;
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      color: var(--gray-400);
+      transition: all .2s;
+      font-family: var(--font-main);
+      flex: 1;
+      text-align: center
+    }
+
+    .panel-tab.active {
+      color: var(--green-600);
+      border-bottom-color: var(--green-500)
+    }
+
+    .panel-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0
+    }
+
+    /* ── PANEL SKELETON LOADER ───────────────────────── */
+    .skeleton {
+      background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-50) 50%, var(--gray-100) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: var(--r-sm)
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: 200% 0
+      }
+
+      100% {
+        background-position: -200% 0
+      }
+    }
+
+    .skeleton-block {
+      height: 14px;
+      margin-bottom: 8px;
+      border-radius: 4px
+    }
+
+    /* ── INSIGHT CARD ────────────────────────────────── */
+    .insight-card {
+      margin: 12px;
+      background: linear-gradient(135deg, var(--green-50), var(--teal-50));
+      border: 1.5px solid var(--green-200);
+      border-radius: var(--r-lg);
+      padding: 14px
+    }
+
+    .insight-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px
+    }
+
+    .insight-title {
+      font-size: 12px;
+      color: var(--green-600);
+      font-weight: 600;
+      letter-spacing: .04em;
+      text-transform: uppercase
+    }
+
+    .insight-coords {
+      font-size: 11px;
+      color: var(--gray-400);
+      font-family: monospace;
+      margin-top: 2px
+    }
+
+    .insight-date {
+      font-size: 11.5px;
+      color: var(--gray-400)
+    }
+
+    .insight-metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px
+    }
+
+    .insight-metric {
+      background: var(--white);
+      border-radius: var(--r-sm);
+      padding: 9px;
+      border: 1px solid var(--gray-100)
+    }
+
+    .im-icon {
+      font-size: 14px;
+      margin-bottom: 3px
+    }
+
+    .im-label {
+      font-size: 10px;
+      color: var(--gray-400);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: .04em
+    }
+
+    .im-value {
+      font-size: 15px;
+      font-weight: 600;
+      font-family: var(--font-accent);
+      color: var(--gray-800);
+      margin-top: 1px
+    }
+
+    .im-tag {
+      font-size: 10.5px;
+      color: var(--gray-400);
+      margin-top: 1px
+    }
+
+    /* ── AWD CARD ────────────────────────────────────── */
+    .awd-card {
+      margin: 0 12px 12px;
+      background: var(--white);
+      border: 1.5px solid var(--green-200);
+      border-radius: var(--r-lg);
+      padding: 14px;
+      position: relative;
+      overflow: hidden
+    }
+
+    .awd-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--green-400), var(--teal-400))
+    }
+
+    .awd-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px
+    }
+
+    .awd-title {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--gray-700)
+    }
+
+    .awd-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--green-100);
+      color: var(--green-600);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600
+    }
+
+    .conf-bar {
+      background: var(--gray-100);
+      border-radius: 4px;
+      height: 7px;
+      overflow: hidden;
+      margin: 8px 0 4px
+    }
+
+    .conf-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--green-400), var(--teal-400));
+      transition: width 1s ease
+    }
+
+    .conf-label {
+      font-size: 11px;
+      color: var(--gray-400);
+      display: flex;
+      justify-content: space-between
+    }
+
+    .cycles-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-top: 10px
+    }
+
+    .cycle-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--green-50);
+      border-radius: var(--r-sm);
+      padding: 7px 10px;
+      font-size: 12px
+    }
+
+    .cycle-icon {
+      color: var(--green-500);
+      font-size: 13px
+    }
+
+    .cycle-text {
+      flex: 1;
+      color: var(--gray-700);
+      font-weight: 500
+    }
+
+    .cycle-days {
+      font-size: 11px;
+      color: var(--gray-400);
+      font-family: monospace
+    }
+
+    /* ── METHANE CARD ────────────────────────────────── */
+    .methane-card {
+      margin: 0 12px 12px;
+      background: var(--white);
+      border: 1.5px solid var(--amber-200);
+      border-radius: var(--r-lg);
+      padding: 14px;
+      position: relative;
+      overflow: hidden
+    }
+
+    .methane-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--amber-400), var(--red-400))
+    }
+
+    .methane-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px
+    }
+
+    .methane-title {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--gray-700)
+    }
+
+    .methane-value {
+      font-size: 24px;
+      font-weight: 700;
+      font-family: var(--font-accent);
+      color: var(--amber-600)
+    }
+
+    .methane-unit {
+      font-size: 13px;
+      color: var(--gray-400)
+    }
+
+    .reduction-tag {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--green-100);
+      color: var(--green-600);
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 8px
+    }
+
+    /* ── VERIFY CARD ─────────────────────────────────── */
+    .verify-card {
+      margin: 0 12px 12px;
+      background: var(--white);
+      border: 1.5px solid var(--sky-200);
+      border-radius: var(--r-lg);
+      padding: 14px
+    }
+
+    .verify-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px
+    }
+
+    .verify-title {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--gray-700)
+    }
+
+    .verify-status {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--green-600)
+    }
+
+    .lock-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 8px;
+      background: var(--gray-50);
+      border-radius: var(--r-sm);
+      margin-bottom: 6px
+    }
+
+    .lock-icon {
+      font-size: 15px;
+      flex-shrink: 0;
+      margin-top: 1px
+    }
+
+    .lock-text {
+      flex: 1
+    }
+
+    .lock-title {
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--gray-700)
+    }
+
+    .lock-desc {
+      font-size: 11px;
+      color: var(--gray-400);
+      margin-top: 1px
+    }
+
+    .lock-pass {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 10px;
+      flex-shrink: 0;
+      margin-top: 2px
+    }
+
+    .lock-pass.pass {
+      color: var(--green-600);
+      background: var(--green-100)
+    }
+
+    .lock-pass.fail {
+      color: var(--red-600);
+      background: #fee2e2
+    }
+
+    .ai-explanation {
+      background: var(--sky-50);
+      border: 1px solid var(--sky-200);
+      border-radius: var(--r-sm);
+      padding: 10px;
+      margin-top: 8px
+    }
+
+    .ai-tag {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--sky-600);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      margin-bottom: 4px
+    }
+
+    .ai-text {
+      font-size: 12px;
+      color: var(--gray-600);
+      line-height: 1.5;
+      font-style: italic
+    }
+
+    /* ── CERT / WALLET ───────────────────────────────── */
+    .cert-card {
+      margin: 0 12px 12px;
+      background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+      border: 2px solid var(--green-200);
+      border-radius: var(--r-xl);
+      padding: 18px;
+      position: relative;
+      overflow: hidden
+    }
+
+    .cert-watermark {
+      position: absolute;
+      bottom: -20px;
+      right: -20px;
+      font-size: 90px;
+      opacity: .06;
+      line-height: 1
+    }
+
+    .cert-header {
+      text-align: center;
+      margin-bottom: 14px
+    }
+
+    .cert-badge-icon {
+      font-size: 32px;
+      display: block;
+      margin-bottom: 6px
+    }
+
+    .cert-title {
+      font-family: var(--font-accent);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--green-600);
+      letter-spacing: .02em
+    }
+
+    .cert-subtitle {
+      font-size: 11.5px;
+      color: var(--gray-400);
+      margin-top: 2px
+    }
+
+    .cert-divider {
+      height: 1px;
+      background: var(--green-200);
+      margin: 10px 0
+    }
+
+    .cert-details {
+      display: flex;
+      flex-direction: column;
+      gap: 5px
+    }
+
+    .cert-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px
+    }
+
+    .cert-key {
+      color: var(--gray-400)
+    }
+
+    .cert-val {
+      font-weight: 600;
+      color: var(--green-600);
+      font-family: var(--font-accent)
+    }
+
+    .cert-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px
+    }
+
+    .cert-btn {
+      flex: 1;
+      padding: 9px;
+      border-radius: var(--r-sm);
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-main);
+      border: none;
+      transition: all .2s
+    }
+
+    .cert-btn-primary {
+      background: var(--green-500);
+      color: #fff
+    }
+
+    .cert-btn-primary:hover {
+      background: var(--green-600)
+    }
+
+    .cert-btn-primary:disabled {
+      background: var(--gray-400);
+      cursor: not-allowed
+    }
+
+    .cert-btn-secondary {
+      background: var(--green-100);
+      color: var(--green-600);
+      border: 1.5px solid var(--green-200)
+    }
+
+    .cert-btn-secondary:hover {
+      background: var(--green-200)
+    }
+
+    .wallet-card {
+      margin: 0 12px 12px;
+      background: linear-gradient(135deg, var(--green-500), var(--teal-400));
+      border-radius: var(--r-lg);
+      padding: 16px;
+      color: #fff;
+      position: relative;
+      overflow: hidden
+    }
+
+    .wallet-card::after {
+      content: '';
+      position: absolute;
+      top: -30px;
+      right: -30px;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .1)
+    }
+
+    .wallet-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      opacity: .8
+    }
+
+    .wallet-amount {
+      font-family: var(--font-accent);
+      font-size: 32px;
+      font-weight: 700;
+      margin: 4px 0
+    }
+
+    .wallet-unit {
+      font-size: 14px;
+      opacity: .8
+    }
+
+    .wallet-meta {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      font-size: 11.5px;
+      opacity: .8
+    }
+
+    .wallet-earned {
+      background: rgba(255, 255, 255, .2);
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-weight: 600
+    }
+
+    /* ── CHARTS ──────────────────────────────────────── */
+    .chart-section {
+      padding: 12px
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px
+    }
+
+    .chart-title {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--gray-700)
+    }
+
+    .chart-legend {
+      display: flex;
+      gap: 10px
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      color: var(--gray-400)
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%
+    }
+
+    .chart-wrap {
+      height: 120px
+    }
+
+    /* ── SNAPSHOT CANVASES ───────────────────────────── */
+    .snapshot-row {
+      display: flex;
+      gap: 8px;
+      margin: 0 12px 12px
+    }
+
+    .snapshot-item {
+      flex: 1;
+      border-radius: var(--r-sm);
+      overflow: hidden;
+      position: relative;
+      border: 1.5px solid var(--gray-200);
+      cursor: pointer;
+      transition: all .2s
+    }
+
+    .snapshot-item:hover {
+      border-color: var(--green-400);
+      transform: scale(1.02)
+    }
+
+    .snapshot-canvas {
+      width: 100%;
+      height: 60px;
+      display: block
+    }
+
+    .snapshot-label {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0, 0, 0, .65);
+      color: #fff;
+      font-size: 9.5px;
+      font-weight: 600;
+      padding: 3px 6px;
+      text-align: center;
+      letter-spacing: .04em
+    }
+
+    /* ── LOADING OVERLAY ─────────────────────────────── */
+    .loading-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, .92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+      gap: 12px
+    }
+
+    .loading-spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid var(--green-100);
+      border-top-color: var(--green-500);
+      border-radius: 50%;
+      animation: spin .8s linear infinite
+    }
+
+    .loading-text {
+      font-size: 13px;
+      color: var(--gray-600);
+      font-weight: 500
+    }
+
+    .loading-step {
+      font-size: 11px;
+      color: var(--gray-400);
+      font-family: monospace
+    }
+
+    /* ── SCROLLBAR ───────────────────────────────────── */
+    ::-webkit-scrollbar {
+      width: 4px
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--gray-200);
+      border-radius: 2px
+    }
+
+    .leaflet-container {
+      background: #b8d4e8
+    }
+
+    @media(max-width:1100px) {
+      .left-panel {
+        width: 250px
+      }
+
+      .right-panel {
+        width: 300px
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ── TOAST CONTAINER ──────────────────────────── -->
+  <div id="toast"></div>
+
+  <!-- ── API STATUS BAR ───────────────────────────── -->
+  <div class="api-bar">
+    <div class="api-dot" id="api-dot"></div>
+    <span id="api-endpoint-label" class="api-endpoint">Connecting to Flask API…</span>
+    <span class="api-status-text" id="api-status-text">—</span>
+  </div>
+
+  <!-- ── TOP NAV ──────────────────────────────────── -->
+  <nav class="topnav">
+    <a class="logo" href="#">
+      <div class="logo-icon">🌿</div>CarbonKarma
+    </a>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="switchTab('dashboard',this)"><span
+          class="tab-dot"></span>Dashboard</button>
+      <button class="nav-tab" onclick="switchTab('satellite',this)"><span class="tab-dot"></span>Satellite
+        Layers</button>
+      <button class="nav-tab" onclick="switchTab('fusion',this)"><span class="tab-dot"></span>Fusion View</button>
+      <button class="nav-tab" onclick="switchTab('awd',this)"><span class="tab-dot"></span>AWD Verification</button>
+      <button class="nav-tab" onclick="switchTab('credits',this)"><span class="tab-dot"></span>Credits &amp;
+        Cert</button>
+    </div>
+    <div class="nav-right">
+      <div class="status-badge">
+        <div class="pulse-dot"></div><span id="sensor-count-badge">Live · 3 Sensors</span>
+      </div>
+      <button class="btn-primary" id="run-btn" onclick="runAnalysis()">▶ Run Analysis</button>
+    </div>
+  </nav>
+
+  <!-- ── MAIN ─────────────────────────────────────── -->
+  <div class="main-layout">
+
+    <!-- LEFT PANEL -->
+    <div class="left-panel">
+      <div class="panel-section">
+        <div class="section-label">Farm Selection</div>
+        <div class="farm-input-group">
+          <div class="input-row active">
+            <span class="input-row-icon">🔷</span>
+            <div class="input-row-text">
+              <div class="input-row-label">Draw Boundary</div>
+              <div class="input-row-value">Polygon tool</div>
+            </div>
+          </div>
+          <div class="coord-inputs">
+            <input class="coord-input" type="text" placeholder="Latitude" id="lat-input" value="18.5204">
+            <input class="coord-input" type="text" placeholder="Longitude" id="lon-input" value="73.8567">
+          </div>
+          <div class="input-row" onclick="detectLocation()">
+            <span class="input-row-icon">📡</span>
+            <div class="input-row-text">
+              <div class="input-row-label">Auto-Detect</div>
+              <div class="input-row-value">Use GPS location</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <div class="section-label">Time Range</div>
+        <div class="time-range-row">
+          <button class="time-chip" onclick="setTimeRange(7,this)">7d</button>
+          <button class="time-chip active" onclick="setTimeRange(30,this)">30d</button>
+          <button class="time-chip" onclick="setTimeRange(60,this)">60d</button>
+          <button class="time-chip" onclick="setTimeRange(90,this)">90d</button>
+        </div>
+        <button class="run-btn" id="run-btn-left" onclick="runAnalysis()">Analyze Farm →</button>
+      </div>
+
+      <div class="panel-section">
+        <div class="section-label">Sensor Layers</div>
+        <div class="layer-toggles">
+          <div class="layer-toggle on" id="layer-s1" style="--layer-color:#bae6fd;--layer-bg:#f0f9ff"
+            onclick="toggleLayer('s1',this)">
+            <div class="layer-swatch" style="background:#dbeafe">🌊</div>
+            <div class="layer-info">
+              <div class="layer-name">Sentinel-1 SAR</div>
+              <div class="layer-sub">Water / Drainage · C-Band</div>
+            </div>
+            <div class="toggle-switch on">
+              <div class="toggle-thumb"></div>
+            </div>
+          </div>
+          <div class="layer-toggle on" id="layer-s2" style="--layer-color:#a8e0c0;--layer-bg:#f0faf4"
+            onclick="toggleLayer('s2',this)">
+            <div class="layer-swatch" style="background:#d1fae5">🌱</div>
+            <div class="layer-info">
+              <div class="layer-name">Sentinel-2 NDVI</div>
+              <div class="layer-sub">Biomass · Multispectral</div>
+            </div>
+            <div class="toggle-switch on">
+              <div class="toggle-thumb"></div>
+            </div>
+          </div>
+          <div class="layer-toggle on" id="layer-s3" style="--layer-color:#fde68a;--layer-bg:#fffbeb"
+            onclick="toggleLayer('s3',this)">
+            <div class="layer-swatch" style="background:#fef3c7">🌡️</div>
+            <div class="layer-info">
+              <div class="layer-name">Sentinel-3 Thermal</div>
+              <div class="layer-sub">Soil Temp · LST (SLSTR)</div>
+            </div>
+            <div class="toggle-switch on">
+              <div class="toggle-thumb"></div>
+            </div>
+          </div>
+          <div class="layer-toggle" id="layer-wx" style="--layer-color:#e9d5ff;--layer-bg:#faf5ff"
+            onclick="toggleLayer('wx',this)">
+            <div class="layer-swatch" style="background:#f3e8ff">🌧️</div>
+            <div class="layer-info">
+              <div class="layer-name">Open-Meteo</div>
+              <div class="layer-sub">Rainfall · Ground Truth</div>
+            </div>
+            <div class="toggle-switch">
+              <div class="toggle-thumb"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-section" id="summary-metrics">
+        <div class="section-label">Live Metrics</div>
+        <div class="metric-grid">
+          <div class="metric-card" style="--card-bg:#f0f9ff;--card-border:#bae6fd;--card-color:#0284c7">
+            <div class="metric-label">Water Level</div>
+            <div class="metric-value" id="m-water">—</div>
+            <div class="metric-sub">SAR Backscatter</div>
+          </div>
+          <div class="metric-card" style="--card-bg:#f0faf4;--card-border:#a8e0c0;--card-color:#1e7a47">
+            <div class="metric-label">NDVI</div>
+            <div class="metric-value" id="m-ndvi">—</div>
+            <div class="metric-sub">Crop Health</div>
+          </div>
+          <div class="metric-card" style="--card-bg:#fffbeb;--card-border:#fde68a;--card-color:#b45309">
+            <div class="metric-label">Soil Temp</div>
+            <div class="metric-value" id="m-temp">—</div>
+            <div class="metric-sub">Aerobic zone</div>
+          </div>
+          <div class="metric-card" style="--card-bg:#fdf8f3;--card-border:#e8d5c4;--card-color:#8b5e3c">
+            <div class="metric-label">Rainfall</div>
+            <div class="metric-value" id="m-rain">—</div>
+            <div class="metric-sub" id="m-rain-sub">Shield status</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAP -->
+    <div class="map-area">
+      <div id="main-map"></div>
+      <div class="map-overlay-controls">
+        <button class="map-ctrl-btn active" id="tileBtn" onclick="cycleTile()">🛰️ Satellite</button>
+        <button class="map-ctrl-btn" onclick="centerOnFarm()">🎯 Center</button>
+      </div>
+      <div class="satellite-indicator">
+        <div class="sat-live-dot"></div>
+        <span id="sat-pass-label">Sentinel-1 · Pass 12 Feb 2026 · 10m res</span>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="right-panel">
+      <div class="panel-tabs">
+        <button class="panel-tab active" onclick="switchPanelTab('insight',this)">Pixel Data</button>
+        <button class="panel-tab" onclick="switchPanelTab('awd',this)">AWD</button>
+        <button class="panel-tab" onclick="switchPanelTab('methane',this)">Methane</button>
+        <button class="panel-tab" onclick="switchPanelTab('cert',this)">Credits</button>
+      </div>
+
+      <div class="panel-content">
+
+        <!-- PIXEL INSIGHT TAB -->
+        <div id="tab-insight">
+          <div class="insight-card">
+            <div class="insight-header">
+              <div>
+                <div class="insight-title">📍 Pixel Insight</div>
+                <div class="insight-coords" id="insight-coords">—</div>
+              </div>
+              <div class="insight-date" id="insight-date">—</div>
+            </div>
+            <div class="insight-metrics">
+              <div class="insight-metric">
+                <div class="im-icon">💧</div>
+                <div class="im-label">Water Level</div>
+                <div class="im-value" id="pi-water" style="color:#0284c7">—</div>
+                <div class="im-tag" id="pi-water-tag">—</div>
+              </div>
+              <div class="insight-metric">
+                <div class="im-icon">🌱</div>
+                <div class="im-label">NDVI</div>
+                <div class="im-value" id="pi-ndvi" style="color:#1e7a47">—</div>
+                <div class="im-tag" id="pi-ndvi-tag">—</div>
+              </div>
+              <div class="insight-metric">
+                <div class="im-icon">🌡️</div>
+                <div class="im-label">Temperature</div>
+                <div class="im-value" id="pi-temp" style="color:#b45309">—</div>
+                <div class="im-tag">Aerobic zone</div>
+              </div>
+              <div class="insight-metric">
+                <div class="im-icon">🌧️</div>
+                <div class="im-label">Rainfall</div>
+                <div class="im-value" id="pi-rain" style="color:#0d4a28">—</div>
+                <div class="im-tag" id="pi-rain-tag">—</div>
+              </div>
+              <div class="insight-metric">
+                <div class="im-icon">🟤</div>
+                <div class="im-label">Soil Moisture</div>
+                <div class="im-value" id="pi-moisture" style="color:#8b5e3c">—</div>
+                <div class="im-tag">Post-irrigation</div>
+              </div>
+              <div class="insight-metric">
+                <div class="im-icon">🚜</div>
+                <div class="im-label">Flood Type</div>
+                <div class="im-value" id="pi-flood" style="color:#1e7a47;font-size:13px">—</div>
+                <div class="im-tag">Managed AWD</div>
+              </div>
+            </div>
+            <div
+              style="margin-top:10px;padding:8px;background:var(--green-100);border-radius:var(--r-sm);text-align:center">
+              <span style="font-size:12.5px;font-weight:700;color:var(--green-600)" id="awd-status-badge">Awaiting
+                Analysis…</span>
+            </div>
+          </div>
+
+          <div class="section-label" style="padding:0 12px 6px">Satellite Snapshots</div>
+          <div class="snapshot-row">
+            <div class="snapshot-item"><canvas class="snapshot-canvas" id="snap-s1" width="90" height="60"></canvas>
+              <div class="snapshot-label">S-1 SAR Water</div>
+            </div>
+            <div class="snapshot-item"><canvas class="snapshot-canvas" id="snap-s2" width="90" height="60"></canvas>
+              <div class="snapshot-label">S-2 NDVI</div>
+            </div>
+            <div class="snapshot-item"><canvas class="snapshot-canvas" id="snap-s3" width="90" height="60"></canvas>
+              <div class="snapshot-label">S-3 Thermal</div>
+            </div>
+          </div>
+
+          <div class="chart-section">
+            <div class="chart-header">
+              <div class="chart-title">Timeline · Last <span id="timeline-days">30</span> Days</div>
+              <div class="chart-legend">
+                <div class="legend-item">
+                  <div class="legend-dot" style="background:#38bdf8"></div>Water
+                </div>
+                <div class="legend-item">
+                  <div class="legend-dot" style="background:#3db877"></div>NDVI
+                </div>
+                <div class="legend-item">
+                  <div class="legend-dot" style="background:#f59e0b"></div>Rain
+                </div>
+              </div>
+            </div>
+            <div class="chart-wrap"><canvas id="timeline-chart"></canvas></div>
+          </div>
+        </div>
+
+        <!-- AWD TAB -->
+        <div id="tab-awd" style="display:none">
+          <div class="awd-card">
+            <div class="awd-header">
+              <div class="awd-title">AWD Verification</div>
+              <div class="awd-badge" id="awd-verified-badge">Awaiting…</div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gray-400)">
+              <span>Triple-Lock Confidence</span><span style="font-weight:600;color:var(--green-600)"
+                id="awd-confidence">—</span>
+            </div>
+            <div class="conf-bar">
+              <div class="conf-fill" id="awd-conf-fill" style="width:0%"></div>
+            </div>
+            <div class="conf-label"><span>0%</span><span>100%</span></div>
+            <div class="section-label" style="margin-top:10px;margin-bottom:6px">Detected Cycles</div>
+            <div class="cycles-grid" id="cycles-grid">
+              <div class="cycle-row" style="color:var(--gray-400);justify-content:center;font-size:12px">Run analysis to
+                detect cycles</div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:10px">
+              <div
+                style="flex:1;background:var(--sky-50);border:1px solid var(--sky-200);border-radius:var(--r-sm);padding:8px;text-align:center">
+                <div style="font-size:18px;font-weight:700;font-family:var(--font-accent);color:var(--sky-600)"
+                  id="irrigation-events">—</div>
+                <div style="font-size:10.5px;color:var(--gray-400)">Irrigation Events</div>
+              </div>
+              <div
+                style="flex:1;background:var(--green-50);border:1px solid var(--green-200);border-radius:var(--r-sm);padding:8px;text-align:center">
+                <div style="font-size:18px;font-weight:700;font-family:var(--font-accent);color:var(--green-600)"
+                  id="rainfall-events">—</div>
+                <div style="font-size:10.5px;color:var(--gray-400)">Rainfall Events</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="verify-card">
+            <div class="verify-header">
+              <div class="verify-title">Triple-Lock Logic</div>
+              <div class="verify-status" id="trilock-status">🔒 Awaiting…</div>
+            </div>
+            <div class="lock-item">
+              <span class="lock-icon">🌊</span>
+              <div class="lock-text">
+                <div class="lock-title">Radar Check</div>
+                <div class="lock-desc" id="lock-radar-desc">SAR Backscatter threshold check</div>
+              </div>
+              <div class="lock-pass" id="lock-radar-pass">—</div>
+            </div>
+            <div class="lock-item">
+              <span class="lock-icon">☔</span>
+              <div class="lock-text">
+                <div class="lock-title">Rainfall Shield</div>
+                <div class="lock-desc" id="lock-rain-desc">Rainfall cross-reference check</div>
+              </div>
+              <div class="lock-pass" id="lock-rain-pass">—</div>
+            </div>
+            <div class="lock-item">
+              <span class="lock-icon">🌡️</span>
+              <div class="lock-text">
+                <div class="lock-title">Metabolic Check</div>
+                <div class="lock-desc" id="lock-temp-desc">Soil temp aerobic check</div>
+              </div>
+              <div class="lock-pass" id="lock-temp-pass">—</div>
+            </div>
+            <div class="ai-explanation">
+              <div class="ai-tag">AI Explanation</div>
+              <div class="ai-text" id="ai-explanation">Run analysis to generate verification explanation.</div>
+            </div>
+          </div>
+
+          <div class="chart-section">
+            <div class="chart-header">
+              <div class="chart-title">AWD Flood–Dry Cycles</div>
+            </div>
+            <div class="chart-wrap"><canvas id="awd-chart"></canvas></div>
+          </div>
+        </div>
+
+        <!-- METHANE TAB -->
+        <div id="tab-methane" style="display:none">
+          <div class="methane-card">
+            <div class="methane-header">
+              <div class="methane-title">Methane Emission</div>
+              <span style="font-size:20px">🔥</span>
+            </div>
+            <div class="methane-value"><span id="methane-val">—</span> <span class="methane-unit" id="methane-unit">kg
+                CH₄/day</span></div>
+            <div style="font-size:11.5px;color:var(--gray-400);margin-top:2px" id="methane-category">Run analysis to
+              compute flux</div>
+            <div class="reduction-tag" id="methane-reduction" style="display:none">—</div>
+            <div style="margin-top:12px">
+              <div style="font-size:11px;color:var(--gray-400);margin-bottom:6px">Flux Calculation · TerraNexus Engine
+              </div>
+              <div
+                style="background:var(--gray-50);border-radius:var(--r-sm);padding:10px;font-size:11.5px;font-family:monospace;color:var(--gray-600)"
+                id="flux-formula">
+                Awaiting analysis…
+              </div>
+            </div>
+          </div>
+
+          <div
+            style="margin:0 12px 12px;background:var(--white);border:1.5px solid var(--gray-200);border-radius:var(--r-lg);padding:14px">
+            <div style="font-size:12.5px;font-weight:600;color:var(--gray-700);margin-bottom:10px">Emission Zone Map
+            </div>
+            <div style="display:flex;gap:4px;height:16px;border-radius:8px;overflow:hidden;margin-bottom:6px">
+              <div style="flex:1;background:#3db877"></div>
+              <div style="flex:1;background:#86efac"></div>
+              <div style="flex:1;background:#fde68a"></div>
+              <div style="flex:1;background:#fbbf24"></div>
+              <div style="flex:1;background:#f97316"></div>
+              <div style="flex:1;background:#ef4444"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--gray-400)">
+              <span>Low (0.5)</span><span>Medium (1.8)</span><span>High (4.0)</span>
+            </div>
+            <div
+              style="margin-top:10px;padding:8px;background:var(--green-50);border-radius:var(--r-sm);display:flex;align-items:center;gap:8px">
+              <span style="font-size:18px">📍</span>
+              <div>
+                <div style="font-size:12px;font-weight:600;color:var(--green-600)" id="methane-farm-label">This Farm: —
+                </div>
+                <div style="font-size:11px;color:var(--gray-400)" id="methane-farm-sub">Run analysis to compare</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="chart-section">
+            <div class="chart-header">
+              <div class="chart-title">Methane Trend · <span id="methane-days">30</span> Days</div>
+            </div>
+            <div class="chart-wrap"><canvas id="methane-chart"></canvas></div>
+          </div>
+        </div>
+
+        <!-- CREDITS & CERT TAB -->
+        <div id="tab-cert" style="display:none">
+          <div class="wallet-card">
+            <div class="wallet-label">Carbon Credits Earned</div>
+            <div class="wallet-amount"><span id="credits-total">—</span> <span class="wallet-unit">CO₂e</span></div>
+            <div class="wallet-meta">
+              <span id="credits-updated">Last update: —</span>
+              <span class="wallet-earned" id="credits-period">+— this period</span>
+            </div>
+          </div>
+
+          <div class="cert-card">
+            <div class="cert-watermark">🌿</div>
+            <div class="cert-header">
+              <span class="cert-badge-icon">🏆</span>
+              <div class="cert-title">Green Compliance Certificate</div>
+              <div class="cert-subtitle">TerraNexus · CarbonKarma dMRV v1.0</div>
+            </div>
+            <div class="cert-divider"></div>
+            <div class="cert-details">
+              <div class="cert-row"><span class="cert-key">Farm ID</span><span class="cert-val"
+                  id="cert-farm-id">—</span></div>
+              <div class="cert-row"><span class="cert-key">Period</span><span class="cert-val" id="cert-period">—</span>
+              </div>
+              <div class="cert-row"><span class="cert-key">AWD Cycles Verified</span><span class="cert-val"
+                  id="cert-cycles">—</span></div>
+              <div class="cert-row"><span class="cert-key">Methane Reduction</span><span class="cert-val"
+                  id="cert-reduction">—</span></div>
+              <div class="cert-row"><span class="cert-key">Data Integrity</span><span class="cert-val"
+                  id="cert-integrity">—</span></div>
+              <div class="cert-row"><span class="cert-key">Confidence Score</span><span class="cert-val"
+                  id="cert-confidence">—</span></div>
+            </div>
+            <div class="cert-divider"></div>
+            <div
+              style="text-align:center;background:var(--green-100);border-radius:var(--r-sm);padding:8px;font-size:12px;font-weight:700;color:var(--green-600)"
+              id="cert-status-banner">
+              Run analysis to generate certificate
+            </div>
+            <div class="cert-actions">
+              <button class="cert-btn cert-btn-primary" id="cert-download-btn" onclick="downloadCert()" disabled>⬇
+                Download PDF</button>
+              <button class="cert-btn cert-btn-secondary" onclick="openRegistry()">🔗 Registry</button>
+            </div>
+          </div>
+
+          <div style="margin:0 12px 12px">
+            <div class="section-label" style="margin-bottom:8px">Audit Trail · Proof Chain</div>
+            <div id="audit-trail" style="display:flex;flex-direction:column;gap:6px">
+              <div
+                style="padding:12px;background:var(--gray-50);border-radius:var(--r-sm);font-size:12px;color:var(--gray-400);text-align:center">
+                Run analysis to populate audit trail</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ═══════════════════════════════════════════════════════════════
+    // CONFIG — adjust BASE_URL to match your Flask server
+    // ═══════════════════════════════════════════════════════════════
+    const CONFIG = {
+      BASE_URL: window.FLASK_BASE_URL || 'http://localhost:5000',
+      FARM_ID: 'TNX-1023',
+      POLL_INTERVAL_MS: 30000,   // auto-refresh every 30s after first analysis
+    };
+
+    // ═══════════════════════════════════════════════════════════════
+    // STATE
+    // ═══════════════════════════════════════════════════════════════
+    let state = {
+      lat: 18.5204,
+      lon: 73.8567,
+      days: 30,
+      analysisRunning: false,
+      lastAnalysisData: null,
+      layers: { s1: true, s2: true, s3: true, wx: false },
+      charts: {},
+      pollTimer: null,
+    };
+
+    // ═══════════════════════════════════════════════════════════════
+    // TOAST NOTIFICATIONS
+    // ═══════════════════════════════════════════════════════════════
+    function toast(msg, type = 'info', duration = 4000) {
+      const el = document.createElement('div');
+      el.className = `toast-item ${type}`;
+      el.textContent = msg;
+      document.getElementById('toast').appendChild(el);
+      setTimeout(() => el.remove(), duration);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // API HELPERS
+    // ═══════════════════════════════════════════════════════════════
+    async function apiFetch(path, options = {}) {
+      const url = CONFIG.BASE_URL + path;
+      document.getElementById('api-endpoint-label').textContent = path;
+      try {
+        const res = await fetch(url, {
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          ...options,
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+        setApiStatus('ok', `${res.status} OK`);
+        return data;
+      } catch (err) {
+        setApiStatus('err', err.message);
+        throw err;
+      }
+    }
+
+    function setApiStatus(status, text) {
+      const dot = document.getElementById('api-dot');
+      dot.className = 'api-dot ' + status;
+      document.getElementById('api-status-text').textContent = text;
+    }
+
+    // Ping the API on load
+    async function checkApiHealth() {
+      try {
+        await apiFetch('/health', { method: 'GET' });
+        toast('Flask API connected ✓', 'success', 3000);
+      } catch {
+        setApiStatus('err', 'API unreachable');
+        toast('Flask API unreachable — check server is running on ' + CONFIG.BASE_URL, 'error', 6000);
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // MAP
+    // ═══════════════════════════════════════════════════════════════
+    const map = L.map('main-map', { center: [18.5204, 73.8567], zoom: 13, zoomControl: true });
+
+    const tiles = {
+      satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: '© Esri' }),
+      osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }),
+      terrain: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { attribution: '© OpenTopoMap' }),
+    };
+    tiles.satellite.addTo(map);
+    let currentTileIdx = 0;
+    const tileKeys = ['satellite', 'osm', 'terrain'];
+    const tileLabels = ['🛰️ Satellite', '🗺️ Street', '🏔️ Terrain'];
+
+    function cycleTile() {
+      currentTileIdx = (currentTileIdx + 1) % tileKeys.length;
+      Object.values(tiles).forEach(t => map.removeLayer(t));
+      tiles[tileKeys[currentTileIdx]].addTo(map);
+      document.getElementById('tileBtn').textContent = tileLabels[currentTileIdx];
+    }
+
+    const farmCoords = [[18.5280, 73.8500], [18.5280, 73.8650], [18.5140, 73.8650], [18.5140, 73.8500]];
+    const farmPolygon = L.polygon(farmCoords, {
+      color: '#3db877', weight: 2.5, fillColor: '#3db877', fillOpacity: 0.18, dashArray: '6 4'
+    }).addTo(map);
+    farmPolygon.bindPopup('<b style="color:#1e7a47">🌾 Farm TNX-1023</b><br>AWD Active · 32% reduction');
+
+    const waterOverlay = L.rectangle([[18.5260, 73.8510], [18.5160, 73.8630]], {
+      color: '#38bdf8', weight: 1.5, fillColor: '#38bdf8', fillOpacity: 0.25
+    });
+
+    const pixelMarker = L.circleMarker([18.5204, 73.8567], {
+      radius: 8, color: '#ffffff', weight: 2.5, fillColor: '#3db877', fillOpacity: 1
+    }).addTo(map);
+
+    map.on('click', e => {
+      state.lat = e.latlng.lat;
+      state.lon = e.latlng.lng;
+      pixelMarker.setLatLng(e.latlng);
+      document.getElementById('lat-input').value = state.lat.toFixed(4);
+      document.getElementById('lon-input').value = state.lon.toFixed(4);
+      document.getElementById('insight-coords').textContent = state.lat.toFixed(4) + '°N · ' + state.lon.toFixed(4) + '°E';
+    });
+
+    function centerOnFarm() { map.fitBounds(farmPolygon.getBounds(), { padding: [30, 30] }); }
+    waterOverlay.addTo(map);
+
+    // ═══════════════════════════════════════════════════════════════
+    // LAYER TOGGLES  →  /api/satellite/sentinel1, /sentinel2, etc.
+    // ═══════════════════════════════════════════════════════════════
+    const LAYER_ENDPOINTS = {
+      s1: '/satellite-data',   // returns { backscatter, water_level, ... }
+      s2: '/satellite-data',   // same endpoint, different sensor param
+      s3: '/satellite-data',
+      wx: '/satellite-data',
+    };
+    const SENSOR_NAMES = { s1: 'sentinel1', s2: 'sentinel2', s3: 'sentinel3', wx: 'weather' };
+
+    async function toggleLayer(id, el) {
+      state.layers[id] = !state.layers[id];
+      const sw = el.querySelector('.toggle-switch');
+      sw.classList.toggle('on', state.layers[id]);
+      el.classList.toggle('on', state.layers[id]);
+
+      if (id === 's1') {
+        state.layers[id] ? waterOverlay.addTo(map) : map.removeLayer(waterOverlay);
+      }
+
+      // Fetch latest data for this sensor from the API
+      el.classList.add('loading');
+      try {
+        const params = new URLSearchParams({ sensor: SENSOR_NAMES[id], lat: state.lat, lon: state.lon });
+        const data = await apiFetch(`${LAYER_ENDPOINTS[id]}?${params}`);
+        updateLiveMetricsFromSensor(id, data);
+        toast(`${SENSOR_NAMES[id]} layer ${state.layers[id] ? 'enabled' : 'disabled'}`, 'info', 2000);
+      } catch (e) {
+        toast(`Failed to fetch ${SENSOR_NAMES[id]} data: ${e.message}`, 'error');
+      } finally {
+        el.classList.remove('loading');
+      }
+    }
+
+    function updateLiveMetricsFromSensor(id, data) {
+      // Map API response fields to metric cards
+      const mapping = {
+        s1: () => { if (data.backscatter !== undefined) setMetric('m-water', data.backscatter.toFixed(2)); },
+        s2: () => { if (data.ndvi !== undefined) setMetric('m-ndvi', data.ndvi.toFixed(2)); },
+        s3: () => { if (data.lst !== undefined) setMetric('m-temp', data.lst.toFixed(1) + '°C'); },
+        wx: () => { if (data.precipitation !== undefined) { setMetric('m-rain', data.precipitation + ' mm'); document.getElementById('m-rain-sub').textContent = data.precipitation === 0 ? 'Shield active ✅' : '⚠️ Rain detected'; } },
+      };
+      if (mapping[id]) mapping[id]();
+    }
+
+    function setMetric(id, val) {
+      const el = document.getElementById(id);
+      el.parentElement.classList.add('refreshing');
+      setTimeout(() => { el.textContent = val; el.parentElement.classList.remove('refreshing'); }, 300);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // RUN ANALYSIS  →  POST /api/pipeline/analyze
+    // ═══════════════════════════════════════════════════════════════
+    async function runAnalysis() {
+      if (state.analysisRunning) return;
+      state.lat = parseFloat(document.getElementById('lat-input').value) || 18.5204;
+      state.lon = parseFloat(document.getElementById('lon-input').value) || 73.8567;
+
+      state.analysisRunning = true;
+      setRunBtnLoading(true);
+
+      // Show map overlay
+      const overlay = showMapOverlay([
+        `Fetching Sentinel data for ${state.lat.toFixed(3)}°N, ${state.lon.toFixed(3)}°E…`,
+        'Running TerraNexus Fusion Engine…',
+        'Computing AWD Triple-Lock…',
+        'Calculating methane flux…',
+        'Issuing credits…',
+      ]);
+
+      try {
+        // POST /api/pipeline/analyze
+        const body = JSON.stringify({ lat: state.lat, lon: state.lon, days: state.days, farm_id: CONFIG.FARM_ID });
+        const data = await apiFetch('/fusion-data', { method: 'POST', body });
+
+        state.lastAnalysisData = data;
+        pixelMarker.setLatLng([state.lat, state.lon]);
+        map.setView([state.lat, state.lon], 13);
+
+        // Populate all panels
+        populateInsightTab(data);
+        populateAwdTab(data);
+        populateMethaneTab(data);
+        await populateCertTab();   // separate call to /credits and /certificate
+        drawSnapshots();
+        rebuildCharts(data);
+
+        document.getElementById('sat-pass-label').textContent =
+          `Sentinel-1 · ${data.satellite_pass || 'Latest pass'} · 10m res`;
+
+        toast('Analysis complete ✓', 'success');
+
+        // Start polling for live updates
+        if (state.pollTimer) clearInterval(state.pollTimer);
+        state.pollTimer = setInterval(refreshLiveMetrics, CONFIG.POLL_INTERVAL_MS);
+
+      } catch (err) {
+        toast(`Analysis failed: ${err.message}`, 'error');
+      } finally {
+        hideMapOverlay(overlay);
+        state.analysisRunning = false;
+        setRunBtnLoading(false);
+      }
+    }
+
+    // ── Populate Pixel Insight tab ────────────────────────────────
+    function populateInsightTab(d) {
+      document.getElementById('insight-coords').textContent = `${state.lat.toFixed(4)}°N · ${state.lon.toFixed(4)}°E`;
+      document.getElementById('insight-date').textContent = d.date || new Date().toLocaleDateString();
+
+      setText('pi-water', d.water_level?.toFixed(2) ?? '—');
+      setText('pi-water-tag', d.water_level > 0.5 ? 'High · Irrigation' : 'Low · Drainage');
+      setText('pi-ndvi', d.ndvi?.toFixed(2) ?? '—');
+      setText('pi-ndvi-tag', d.ndvi > 0.5 ? 'Healthy crop' : 'Stressed crop');
+      setText('pi-temp', d.lst != null ? d.lst.toFixed(1) + '°C' : '—');
+      setText('pi-rain', d.precipitation != null ? d.precipitation + ' mm' : '—');
+      setText('pi-rain-tag', d.precipitation === 0 ? 'No rain event' : '⚠️ Rain detected');
+      setText('pi-moisture', d.soil_moisture ?? '—');
+      setText('pi-flood', d.flood_type ?? '—');
+      setText('awd-status-badge', d.awd_active ? '🌾 AWD Status: Active ✅' : '⚠️ AWD Not Detected');
+
+      // Live metric cards
+      setMetric('m-water', d.water_level?.toFixed(2) ?? '—');
+      setMetric('m-ndvi', d.ndvi?.toFixed(2) ?? '—');
+      setMetric('m-temp', d.lst != null ? d.lst.toFixed(1) + '°C' : '—');
+      setMetric('m-rain', d.precipitation != null ? d.precipitation + ' mm' : '—');
+      document.getElementById('m-rain-sub').textContent = d.precipitation === 0 ? 'Shield active ✅' : '⚠️ Rain detected';
+
+      document.getElementById('timeline-days').textContent = state.days;
+    }
+
+    // ── Populate AWD tab  →  /api/awd-status ─────────────────────
+    async function populateAwdTab(fusionData) {
+      try {
+        const params = new URLSearchParams({ lat: state.lat, lon: state.lon, days: state.days });
+        const d = await apiFetch(`/awd-status?${params}`);
+
+        const pct = Math.round((d.confidence ?? 0) * 100);
+        document.getElementById('awd-confidence').textContent = pct + '%';
+        document.getElementById('awd-conf-fill').style.width = pct + '%';
+
+        const verified = d.awd_detected ?? false;
+        const badge = document.getElementById('awd-verified-badge');
+        badge.textContent = verified ? '✅ VERIFIED' : '❌ NOT VERIFIED';
+        badge.style.background = verified ? 'var(--green-100)' : '#fee2e2';
+        badge.style.color = verified ? 'var(--green-600)' : 'var(--red-600)';
+
+        // Cycles
+        const grid = document.getElementById('cycles-grid');
+        grid.innerHTML = '';
+        if (d.cycles && d.cycles.length) {
+          d.cycles.forEach((c, i) => {
+            grid.innerHTML += `<div class="cycle-row"><span class="cycle-icon">✔</span><span class="cycle-text">Cycle ${i + 1} · ${c.type || 'Flood → Dry'}</span><span class="cycle-days">Day ${c.start}–${c.end}</span></div>`;
+          });
+        } else {
+          grid.innerHTML = '<div class="cycle-row" style="color:var(--gray-400);justify-content:center">No cycles detected</div>';
+        }
+
+        document.getElementById('irrigation-events').textContent = d.irrigation_events ?? '—';
+        document.getElementById('rainfall-events').textContent = d.rainfall_events ?? '—';
+
+        // Triple-lock
+        const locks = d.triple_lock || {};
+        setLock('radar', locks.radar);
+        setLock('rain', locks.rainfall_shield);
+        setLock('temp', locks.metabolic);
+        document.getElementById('trilock-status').textContent = (locks.radar && locks.rainfall_shield && locks.metabolic) ? '🔒 All Passed' : '⚠️ Checks Failed';
+        document.getElementById('ai-explanation').textContent = d.explanation || 'No explanation available.';
+
+        // AWD chart
+        if (d.water_series) buildAwdChart(d.water_series);
+
+      } catch (err) {
+        toast('AWD data error: ' + err.message, 'error');
+      }
+    }
+
+    function setLock(name, passed) {
+      const el = document.getElementById(`lock-${name}-pass`);
+      el.textContent = passed ? 'PASS' : 'FAIL';
+      el.className = 'lock-pass ' + (passed ? 'pass' : 'fail');
+    }
+
+    // ── Populate Methane tab  →  /api/methane ────────────────────
+    async function populateMethaneTab(fusionData) {
+      try {
+        const params = new URLSearchParams({ lat: state.lat, lon: state.lon, days: state.days });
+        const d = await apiFetch(`/methane?${params}`);
+
+        const flux = d.flux_kg_per_day ?? d.methane_flux;
+        document.getElementById('methane-val').textContent = flux != null ? flux.toFixed(2) : '—';
+        document.getElementById('methane-category').textContent = d.category ? `Category: ${d.category} · AWD Active` : '—';
+
+        const redEl = document.getElementById('methane-reduction');
+        if (d.reduction_pct != null) {
+          redEl.style.display = 'flex';
+          redEl.textContent = `↓ ${d.reduction_pct}% vs Continuous Flooding Baseline`;
+        }
+
+        // Flux formula
+        const fEl = document.getElementById('flux-formula');
+        if (d.formula_breakdown) {
+          fEl.innerHTML = d.formula_breakdown;
+        } else if (d.ndvi && d.ef && d.delta_temp && flux) {
+          fEl.innerHTML = `Flux = (NDVI_Biomass × EF<sub>0.05</sub>) × e<sup>k</sup> × ΔTemp<br>= (${d.ndvi} × ${d.ef}) × ${d.k_factor ?? 1} × ${d.delta_temp}<br>= <strong style="color:var(--amber-600)">${flux.toFixed(2)} kg CH₄/day</strong>`;
+        }
+
+        document.getElementById('methane-farm-label').textContent = flux != null ? `This Farm: ${flux.toFixed(2)} kg/day` : 'Run analysis to compare';
+        document.getElementById('methane-farm-sub').textContent = d.vs_regional ?? '';
+        document.getElementById('methane-days').textContent = state.days;
+
+        if (d.time_series) buildMethaneChart(d.time_series, d.baseline ?? 2.65);
+
+      } catch (err) {
+        toast('Methane data error: ' + err.message, 'error');
+      }
+    }
+
+    // ── Populate Credits/Cert tab  →  /api/credits + /api/pipeline/certificate/:id ──
+    async function populateCertTab() {
+      try {
+        // Credits
+        const credits = await apiFetch(`/credits?farm_id=${CONFIG.FARM_ID}&lat=${state.lat}&lon=${state.lon}`);
+        document.getElementById('credits-total').textContent = credits.total_co2e?.toFixed(1) ?? '—';
+        document.getElementById('credits-updated').textContent = 'Last update: ' + (credits.updated_at ? new Date(credits.updated_at).toLocaleDateString() : 'Today');
+        document.getElementById('credits-period').textContent = `+${credits.period_co2e?.toFixed(1) ?? '—'} this period`;
+
+        // Certificate
+        const cert = await apiFetch(`/report?farm_id=${CONFIG.FARM_ID}&lat=${state.lat}&lon=${state.lon}`);
+        document.getElementById('cert-farm-id').textContent = cert.farm_id ?? CONFIG.FARM_ID;
+        document.getElementById('cert-period').textContent = cert.period ?? '—';
+        document.getElementById('cert-cycles').textContent = cert.awd_cycles ? `${cert.awd_cycles} cycles ✅` : '—';
+        document.getElementById('cert-reduction').textContent = cert.reduction_pct ? `↓ ${cert.reduction_pct}%` : '—';
+        document.getElementById('cert-integrity').textContent = cert.data_integrity ? `${cert.data_integrity} ✅` : '—';
+        document.getElementById('cert-confidence').textContent = cert.confidence_score ? `${cert.confidence_score}%` : '—';
+        document.getElementById('cert-status-banner').textContent = cert.status ?? '✅ Certified Low-Methane Farming';
+        document.getElementById('cert-download-btn').disabled = false;
+
+        // Audit trail
+        if (cert.audit_trail && cert.audit_trail.length) {
+          const trail = document.getElementById('audit-trail');
+          trail.innerHTML = cert.audit_trail.map(entry => `
+        <div style="display:flex;align-items:center;gap:8px;padding:8px;background:${entry.verified ? 'var(--green-50)' : 'var(--gray-50)'};border-radius:var(--r-sm);font-size:12px;border:1px solid ${entry.verified ? 'var(--green-200)' : 'transparent'}">
+          <span>${entry.icon ?? '📋'}</span>
+          <div>
+            <div style="font-weight:${entry.verified ? '600' : '500'};color:${entry.verified ? 'var(--green-600)' : 'var(--gray-700)'}">${entry.label}</div>
+            <div style="color:var(--gray-400);font-size:11px;font-family:monospace">${entry.detail}</div>
+          </div>
+        </div>`).join('');
+        }
+
+      } catch (err) {
+        toast('Credits data error: ' + err.message, 'error');
+      }
+    }
+
+    // ── Download PDF cert  →  GET /api/pipeline/certificate/:id ──
+    async function downloadCert() {
+      const btn = document.getElementById('cert-download-btn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Generating…';
+      try {
+        const url = `${CONFIG.BASE_URL}/report?farm_id=${CONFIG.FARM_ID}&format=pdf`;
+        // Use window.open for file download (Flask should send with Content-Disposition: attachment)
+        window.open(url, '_blank');
+        toast('Certificate PDF opened in new tab', 'success');
+      } catch (err) {
+        toast('Certificate download failed: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '⬇ Download PDF';
+      }
+    }
+
+    function openRegistry() {
+      window.open(`${CONFIG.BASE_URL}/verification?farm_id=${CONFIG.FARM_ID}`, '_blank');
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // LIVE METRIC POLLING  →  /api/fusion-data (lightweight GET)
+    // ═══════════════════════════════════════════════════════════════
+    async function refreshLiveMetrics() {
+      try {
+        const params = new URLSearchParams({ lat: state.lat, lon: state.lon });
+        const d = await apiFetch(`/fusion-data?${params}`);
+        setMetric('m-water', d.water_level?.toFixed(2) ?? '—');
+        setMetric('m-ndvi', d.ndvi?.toFixed(2) ?? '—');
+        setMetric('m-temp', d.lst != null ? d.lst.toFixed(1) + '°C' : '—');
+        setMetric('m-rain', d.precipitation != null ? d.precipitation + ' mm' : '—');
+      } catch { /* silent — don't spam toasts on poll errors */ }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // CHARTS
+    // ═══════════════════════════════════════════════════════════════
+    function rebuildCharts(data) {
+      // Destroy existing
+      Object.values(state.charts).forEach(c => c.destroy());
+      state.charts = {};
+
+      const labels = Array.from({ length: state.days }, (_, i) => i + 1);
+
+      // Timeline chart
+      const tlCtx = document.getElementById('timeline-chart');
+      state.charts.timeline = new Chart(tlCtx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            { label: 'Water', data: data.water_series || labels.map(d => 0.3 + 0.5 * Math.sin(d * 0.6)), borderColor: '#38bdf8', backgroundColor: 'rgba(56,189,248,.1)', tension: 0.4, borderWidth: 2, pointRadius: 0, fill: true },
+            { label: 'NDVI', data: data.ndvi_series || labels.map(d => 0.5 + 0.15 * Math.sin(d * 0.3)), borderColor: '#3db877', backgroundColor: 'rgba(61,184,119,.08)', tension: 0.4, borderWidth: 2, pointRadius: 0 },
+            { label: 'Rain', data: data.rain_events || labels.map(d => [4, 15, 22].includes(d) ? 0.8 : 0), borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,.3)', type: 'bar', borderWidth: 0 },
+          ],
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false, min: 0, max: 1.2 } } },
+      });
+    }
+
+    function buildAwdChart(series) {
+      const ctx = document.getElementById('awd-chart');
+      if (state.charts.awd) state.charts.awd.destroy();
+      const labels = series.map((_, i) => `D${i + 1}`);
+      state.charts.awd = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{ label: 'Water Level', data: series, borderColor: '#38bdf8', backgroundColor: 'rgba(56,189,248,.15)', tension: 0.3, borderWidth: 2, pointRadius: 0, fill: true }],
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false, min: 0, max: 1 } } },
+      });
+    }
+
+    function buildMethaneChart(series, baseline) {
+      const ctx = document.getElementById('methane-chart');
+      if (state.charts.methane) state.charts.methane.destroy();
+      const labels = series.map((_, i) => `D${i + 1}`);
+      state.charts.methane = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            { label: 'Methane', data: series, borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,.12)', tension: 0.4, borderWidth: 2, pointRadius: 0, fill: true },
+            { label: 'Baseline', data: labels.map(() => baseline), borderColor: '#ef4444', borderDash: [4, 4], borderWidth: 1.5, pointRadius: 0, fill: false },
+          ],
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false, min: 0, max: baseline * 1.4 } } },
+      });
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // SATELLITE SNAPSHOT CANVASES (procedural raster preview)
+    // ═══════════════════════════════════════════════════════════════
+    function drawSnapshot(canvasId, type) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width, h = canvas.height;
+      const img = ctx.createImageData(w, h);
+      for (let i = 0; i < w * h; i++) {
+        const x = i % w, y = Math.floor(i / w);
+        const v = ((Math.sin(x * 0.4 + y * 0.3) + Math.cos(x * 0.2 - y * 0.5)) * 0.5 + 1) / 2;
+        let r, g, b;
+        if (type === 'sar') { r = 10 + v * 60; g = 60 + v * 120; b = 150 + v * 100; }
+        else if (type === 'ndvi') { r = v < 0.5 ? 180 - v * 100 : 60 - v * 40; g = 80 + v * 150; b = 30 + v * 20; }
+        else { r = v * 220; g = v < 0.5 ? v * 100 : 200 - v * 150; b = 200 - v * 180; }
+        img.data[i * 4] = r; img.data[i * 4 + 1] = g; img.data[i * 4 + 2] = b; img.data[i * 4 + 3] = 255;
+      }
+      ctx.putImageData(img, 0, 0);
+    }
+    function drawSnapshots() {
+      drawSnapshot('snap-s1', 'sar');
+      drawSnapshot('snap-s2', 'ndvi');
+      drawSnapshot('snap-s3', 'thermal');
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // MAP OVERLAY HELPER
+    // ═══════════════════════════════════════════════════════════════
+    function showMapOverlay(steps) {
+      const el = document.createElement('div');
+      el.className = 'loading-overlay';
+      el.innerHTML = `<div class="loading-spinner"></div><div class="loading-text" id="ol-text">${steps[0]}</div><div class="loading-step" id="ol-step">Step 1 / ${steps.length}</div>`;
+      document.querySelector('.map-area').appendChild(el);
+      let i = 0;
+      const timer = setInterval(() => {
+        i++;
+        if (i < steps.length) {
+          document.getElementById('ol-text').textContent = steps[i];
+          document.getElementById('ol-step').textContent = `Step ${i + 1} / ${steps.length}`;
+        }
+      }, 900);
+      el._timer = timer;
+      return el;
+    }
+    function hideMapOverlay(el) {
+      clearInterval(el._timer);
+      el.remove();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // UI HELPERS
+    // ═══════════════════════════════════════════════════════════════
+    function setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+
+    function setRunBtnLoading(on) {
+      ['run-btn', 'run-btn-left'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        btn.disabled = on;
+        btn.innerHTML = on
+          ? '<span class="spinner"></span>Running…'
+          : (id === 'run-btn' ? '▶ Run Analysis' : 'Analyze Farm →');
+      });
+    }
+
+    function switchTab(tab, btn) {
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function switchPanelTab(tab, btn) {
+      document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('[id^="tab-"]').forEach(t => t.style.display = 'none');
+      document.getElementById('tab-' + tab).style.display = 'block';
+      // Lazy-init timeline chart on first open
+      if (tab === 'insight' && !state.charts.timeline) {
+        const labels = Array.from({ length: 30 }, (_, i) => i + 1);
+        const ctx = document.getElementById('timeline-chart');
+        state.charts.timeline = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels, datasets: [
+              { data: labels.map(d => 0.3 + 0.5 * Math.sin(d * 0.6)), borderColor: '#38bdf8', backgroundColor: 'rgba(56,189,248,.1)', tension: 0.4, borderWidth: 2, pointRadius: 0, fill: true },
+              { data: labels.map(d => 0.5 + 0.15 * Math.sin(d * 0.3)), borderColor: '#3db877', tension: 0.4, borderWidth: 2, pointRadius: 0 },
+            ]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } },
+        });
+      }
+    }
+
+    function setTimeRange(days, btn) {
+      state.days = days;
+      document.querySelectorAll('.time-chip').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('timeline-days').textContent = days;
+      document.getElementById('methane-days').textContent = days;
+    }
+
+    function detectLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+          state.lat = pos.coords.latitude;
+          state.lon = pos.coords.longitude;
+          map.setView([state.lat, state.lon], 14);
+          document.getElementById('lat-input').value = state.lat.toFixed(4);
+          document.getElementById('lon-input').value = state.lon.toFixed(4);
+        });
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // INIT
+    // ═══════════════════════════════════════════════════════════════
+    window.addEventListener('load', () => {
+      drawSnapshots();
+      // Open insight tab's chart on load
+      setTimeout(() => switchPanelTab('insight', document.querySelector('.panel-tab')), 200);
+      // Check API health
+      checkApiHealth();
+    });
+  </script>
+</body>
+
+</html>

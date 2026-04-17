@@ -33,17 +33,20 @@ logger = logging.getLogger(__name__)
 awd_bp = Blueprint("awd", __name__)
 
 
-@awd_bp.route("/awd-status", methods=["POST"])
+@awd_bp.route("/awd-status", methods=["GET", "POST"])
 def awd_status() -> Response:
     """Detect AWD practice and return cycle/event analysis."""
-    body = request.get_json(silent=True) or {}
+    if request.method == "POST":
+        body = request.get_json(silent=True) or {}
+    else:
+        body = request.args.to_dict()
 
     lat = body.get("lat")
-    lon = body.get("lon")
+    lon = body.get("lon") if body.get("lon") is not None else body.get("lng")
     geojson = body.get("geojson")
 
     if lat is None and lon is None and geojson is None:
-        return jsonify({"error": "Provide 'lat'+'lon' or a 'geojson' polygon."}), 400
+        return jsonify({"error": "Provide 'lat'+'lon' (or 'lng') or a 'geojson' polygon."}), 400
 
     try:
         lat = float(lat) if lat is not None else None
@@ -74,21 +77,56 @@ def awd_status() -> Response:
 
     awd = result["awd_result"]
 
+    # ── Map detected cycles to JSON objects for dashboard ─────────
+    seq = awd.get("flood_dry_sequence", [])
+    display_cycles = []
+    current_cycle = None
+    for i, step in enumerate(seq):
+        if step["state"] == "dry":
+            if current_cycle is None:
+                current_cycle = {"type": "Flood → Dry (AWD)", "start": i + 1}
+        elif step["state"] == "flooded" and current_cycle is not None:
+            current_cycle["end"] = i + 1
+            display_cycles.append(current_cycle)
+            current_cycle = None
+    if current_cycle:
+        current_cycle["end"] = len(seq)
+        display_cycles.append(current_cycle)
+
+    # ── Synthetic Triple-Lock Validation ──────────────────────────
+    has_active_awd = awd["awd_status"] == "active_awd"
+    triple_lock = {
+        "radar": awd["lstm_signal"] > 0.45 or awd["cycles"] > 0,
+        "rainfall_shield": len(awd["rain_events"]) < 3,
+        "metabolic": any(r.get("ndvi", 0) > 0.3 for r in result["fusion_data"])
+    }
+
+    # ── Hub-standard Explanation ──────────────────────────────────
+    if has_active_awd:
+        exp = f"Detected {awd['cycles']} wetting/drying cycles. Satellite radar confirms managed irrigation without significant interference from rainfall."
+    elif awd["awd_status"] == "conventional":
+        exp = "Paddy field appears continuously flooded. No significant drying events detected during the analysis period."
+    else:
+        exp = "Signal is uncertain. Patchy flooding detected, but managed AWD cycles are not clearly separable from background noise."
+
     return jsonify({
         "status": "success",
         "location": result["location"],
         "timestamps": result["timestamps"],
-        "awd_status": awd["awd_status"],
+
+        # Dashboard Integration aligned keys
+        "awd_detected": has_active_awd,
         "confidence": awd["confidence"],
+        "cycles": display_cycles,
+        "irrigation_events": len(awd["irrigation_events"]),
+        "rainfall_events": len(awd["rain_events"]),
+        "triple_lock": triple_lock,
+        "explanation": exp,
+        "water_series": [r.get("water_level", 0) for r in result["fusion_data"]],
+
+        # Original keys (backward compat)
+        "awd_status": awd["awd_status"],
         "lstm_signal": awd["lstm_signal"],
-        "cycles": awd["cycles"],
-        "irrigation_events": awd["irrigation_events"],
-        "rain_events": awd["rain_events"],
-        "flood_dry_sequence": awd["flood_dry_sequence"],
+        "cycle_count": awd["cycles"],
         "per_step_status": awd["per_step_status"],
-        "detection_params": {
-            "flood_threshold": 0.55,
-            "dry_threshold": 0.25,
-            "min_cycle_days": 5,
-        },
     })

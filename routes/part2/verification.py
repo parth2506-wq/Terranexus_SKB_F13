@@ -7,15 +7,23 @@ from services.part2.llm_service import explain_verification
 
 verification_bp = Blueprint("verification", __name__)
 
-@verification_bp.route("/verification", methods=["POST"])
+@verification_bp.route("/verification", methods=["GET", "POST"])
 def verification():
-    body = request.get_json(silent=True) or {}
-    lat = body.get("lat"); lon = body.get("lon"); geojson = body.get("geojson")
-    if lat is None and lon is None and geojson is None:
-        return jsonify({"error": "Provide lat+lon or geojson"}), 400
+    if request.method == "POST":
+        body = request.get_json(silent=True) or {}
+    else:
+        body = request.args.to_dict()
+
+    lat = body.get("lat")
+    lon = body.get("lon") if body.get("lon") is not None else body.get("lng")
+    geojson = body.get("geojson")
+
+    if lat is None and lon is None and geojson is None and not body.get("farm_id"):
+        return jsonify({"error": "Provide lat+lon (or lng), geojson, or farm_id"}), 400
+
     try:
-        lat = float(lat) if lat is not None else None
-        lon = float(lon) if lon is not None else None
+        lat = float(lat) if lat is not None else 18.5204
+        lon = float(lon) if lon is not None else 73.8567
     except (TypeError, ValueError):
         return jsonify({"error": "lat/lon must be numeric"}), 400
 

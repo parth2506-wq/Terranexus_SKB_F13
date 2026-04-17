@@ -10,3 +10,4 @@ from .part2.credits import credits_bp
 from .part2.analytics import analytics_bp
 from .part2.report import report_bp
 from .part2.llm_insights import llm_bp
+from .dashboard_route import dashboard_bp

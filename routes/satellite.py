@@ -37,18 +37,21 @@ logger = logging.getLogger(__name__)
 satellite_bp = Blueprint("satellite", __name__)
 
 
-@satellite_bp.route("/satellite-data", methods=["POST"])
+@satellite_bp.route("/satellite-data", methods=["GET", "POST"])
 def satellite_data() -> Response:
     """Return raw satellite and weather observations for a location."""
-    body = request.get_json(silent=True) or {}
+    if request.method == "POST":
+        body = request.get_json(silent=True) or {}
+    else:
+        body = request.args.to_dict()
 
     # ── Input validation ──────────────────────────────────────────────────
     lat = body.get("lat")
-    lon = body.get("lon")
+    lon = body.get("lon") if body.get("lon") is not None else body.get("lng")
     geojson = body.get("geojson")
 
     if lat is None and lon is None and geojson is None:
-        return jsonify({"error": "Provide 'lat'+'lon' or a 'geojson' polygon."}), 400
+        return jsonify({"error": "Provide 'lat'+'lon' (or 'lng') or a 'geojson' polygon."}), 400
 
     try:
         lat = float(lat) if lat is not None else None

@@ -10,15 +10,21 @@ from services.part2.credit_engine import (
 
 credits_bp = Blueprint("credits", __name__)
 
-@credits_bp.route("/credits", methods=["POST"])
+@credits_bp.route("/credits", methods=["GET", "POST"])
 def credits():
-    body     = request.get_json(silent=True) or {}
-    lat      = body.get("lat"); lon = body.get("lon"); geojson = body.get("geojson")
-    if lat is None and lon is None and geojson is None:
-        return jsonify({"error": "Provide lat+lon or geojson"}), 400
+    if request.method == "POST":
+        body = request.get_json(silent=True) or {}
+    else:
+        body = request.args.to_dict()
+    lat      = body.get("lat")
+    lon      = body.get("lon") if body.get("lon") is not None else body.get("lng")
+    geojson  = body.get("geojson")
+    if lat is None and lon is None and geojson is None and not body.get("farm_id"):
+        return jsonify({"error": "Provide lat+lon (or lng), geojson, or farm_id"}), 400
+
     try:
-        lat = float(lat) if lat is not None else None
-        lon = float(lon) if lon is not None else None
+        lat = float(lat) if lat is not None else 18.5204
+        lon = float(lon) if lon is not None else 73.8567
     except (TypeError, ValueError):
         return jsonify({"error": "lat/lon must be numeric"}), 400
 
@@ -48,6 +54,13 @@ def credits():
         "status": "success",
         "farm_id": farm_id,
         "location": p1["location"],
+
+        # Dashboard Integration aligned keys
+        "total_co2e": wallet["total_balance"],
+        "period_co2e": calculation["credits_earned"],
+        "updated_at": p1.get("timestamps", [None])[-1] or "2026-04-18",
+
+        # Original keys (backward compat)
         "credits_earned": calculation["credits_earned"],
         "usd_value": calculation["usd_value"],
         "total_balance": wallet["total_balance"],

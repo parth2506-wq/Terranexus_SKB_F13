@@ -6,17 +6,20 @@ from __future__ import annotations
 import logging, os, time
 from flask import Flask, jsonify, Response, g, request
 
+from flask_cors import CORS
+
 from config import config
 from routes import (
     satellite_bp, fusion_bp, awd_bp, methane_bp,          # Part 1
     verification_bp, credits_bp, analytics_bp,              # Part 2
-    report_bp, llm_bp,
+    report_bp, llm_bp, dashboard_bp
 )
 
 logging.basicConfig(
     level=logging.DEBUG if config.FLASK_DEBUG else logging.INFO,
     format="%(asctime)s  %(levelname)-8s  %(name)s — %(message)s",
     datefmt="%H:%M:%S",
+    force=True, # Ensure logging is configured correctly
 )
 logger = logging.getLogger("carbonkarma")
 
@@ -26,15 +29,8 @@ os.makedirs(config.REPORT_OUTPUT_DIR, exist_ok=True)
 
 def create_app() -> Flask:
     app = Flask(__name__)
+    CORS(app) # Enable CORS for all routes
     app.config["JSON_SORT_KEYS"] = False
-
-    # CORS (no flask-cors dependency)
-    @app.after_request
-    def _cors(response: Response) -> Response:
-        response.headers["Access-Control-Allow-Origin"]  = "*"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type,Authorization"
-        response.headers["Access-Control-Allow-Methods"] = "GET,POST,OPTIONS,DELETE"
-        return response
 
     @app.before_request
     def _start(): g.t0 = time.perf_counter()
@@ -58,6 +54,7 @@ def create_app() -> Flask:
     app.register_blueprint(analytics_bp)
     app.register_blueprint(report_bp)
     app.register_blueprint(llm_bp)
+    app.register_blueprint(dashboard_bp)
 
     # ── Health + index ────────────────────────────────────────────────────
     @app.route("/health", methods=["GET"])
@@ -69,6 +66,7 @@ def create_app() -> Flask:
         return jsonify({
             "service": "CarbonKarma dMRV Carbon Intelligence Platform",
             "version": "2.0.0",
+            "dashboard": "/dashboard",
             "endpoints": {
                 "part1": [
                     "POST /satellite-data",

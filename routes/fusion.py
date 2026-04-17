@@ -37,17 +37,20 @@ logger = logging.getLogger(__name__)
 fusion_bp = Blueprint("fusion", __name__)
 
 
-@fusion_bp.route("/fusion-data", methods=["POST"])
+@fusion_bp.route("/fusion-data", methods=["GET", "POST"])
 def fusion_data() -> Response:
     """Return fused multi-source observations for a field location."""
-    body = request.get_json(silent=True) or {}
+    if request.method == "POST":
+        body = request.get_json(silent=True) or {}
+    else:
+        body = request.args.to_dict()
 
     lat = body.get("lat")
-    lon = body.get("lon")
+    lon = body.get("lon") if body.get("lon") is not None else body.get("lng")
     geojson = body.get("geojson")
 
     if lat is None and lon is None and geojson is None:
-        return jsonify({"error": "Provide 'lat'+'lon' or a 'geojson' polygon."}), 400
+        return jsonify({"error": "Provide 'lat'+'lon' (or 'lng') or a 'geojson' polygon."}), 400
 
     try:
         lat = float(lat) if lat is not None else None
@@ -58,7 +61,7 @@ def fusion_data() -> Response:
     n_steps = max(1, min(int(body.get("n_steps", 10)), 50))
     step_days = max(1, int(body.get("step_days", 10)))
     start_date = body.get("start_date")
-    include_heatmaps = bool(body.get("include_heatmaps", True))
+    include_heatmaps = str(body.get("include_heatmaps", "true")).lower() == "true"
 
     try:
         result = run_full_pipeline(
@@ -76,7 +79,9 @@ def fusion_data() -> Response:
         logger.exception("Fusion pipeline error")
         return jsonify({"error": f"Pipeline failed: {exc}"}), 500
 
-    # Build the fusion-specific response slice
+    # Build the fusion-specific response slice (Dashboard Integration aligned)
+    latest = result["fusion_data"][-1] if result["fusion_data"] else {}
+    
     response = {
         "status": "success",
         "location": result["location"],
@@ -85,6 +90,22 @@ def fusion_data() -> Response:
         "step_days": result["step_days"],
         "fusion_data": result["fusion_data"],
         "heatmaps": result.get("heatmaps", {}),
+
+        # Flattened metrics for Dashboard "Insight" tab
+        "date": latest.get("timestamp"),
+        "water_level": latest.get("water_level"),
+        "ndvi": latest.get("ndvi"),
+        "lst": latest.get("temperature"),          # Map backend temperature to UI 'lst'
+        "precipitation": latest.get("rainfall"),    # Map backend rainfall to UI 'precipitation'
+        "soil_moisture": latest.get("soil_moisture"),
+        "flood_type": latest.get("flood_type"),
+        "awd_active": result["awd_result"].get("awd_status") == "active_awd",
+        "satellite_pass": f"Sentinel-1 ({latest.get('timestamp')})",
+
+        # Time series arrays for Dashboard Timeline chart
+        "water_series": [r.get("water_level", 0) for r in result["fusion_data"]],
+        "ndvi_series": [r.get("ndvi", 0) for r in result["fusion_data"]],
+        "rain_events": [r.get("rainfall", 0) for r in result["fusion_data"]],
     }
 
     return jsonify(response)

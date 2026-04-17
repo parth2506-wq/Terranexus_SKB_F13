@@ -19,9 +19,11 @@ analytics_bp = Blueprint("analytics", __name__)
 @analytics_bp.route("/analytics", methods=["POST"])
 def analytics():
     body     = request.get_json(silent=True) or {}
-    lat      = body.get("lat"); lon = body.get("lon"); geojson = body.get("geojson")
+    lat      = body.get("lat")
+    lon      = body.get("lon") if body.get("lon") is not None else body.get("lng")
+    geojson  = body.get("geojson")
     if lat is None and lon is None and geojson is None:
-        return jsonify({"error": "Provide lat+lon or geojson"}), 400
+        return jsonify({"error": "Provide lat+lon (or lng) or geojson"}), 400
     try:
         lat = float(lat) if lat is not None else None
         lon = float(lon) if lon is not None else None
