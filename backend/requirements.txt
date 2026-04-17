@@ -2,7 +2,7 @@ Flask==3.0.0
 python-dotenv==1.0.0
 torch==2.11.0
 requests==2.31.0
-chromadb==0.4.15
-langchain==0.0.330
-numpy
+chromadb==1.0.20
+langchain==0.3.25
+numpy==2.2.6
 pandas
