@@ -1,0 +1,36 @@
+# ─────────────────────────────────────────────────────────────
+# CarbonKarma dMRV Platform — Python dependencies
+# Part 1 + Part 2
+# Install: pip install -r requirements.txt
+# ─────────────────────────────────────────────────────────────
+
+# ── Web framework ──────────────────────────────────────────────
+flask>=3.0.0
+flask-cors>=4.0.0          # Optional: CORS is also handled inline
+
+# ── Data science core ──────────────────────────────────────────
+numpy>=1.24.0
+pandas>=2.0.0
+scipy>=1.11.0
+
+# ── Computer vision / geospatial ──────────────────────────────
+opencv-python-headless>=4.8.0   # Use opencv-python for desktop
+Pillow>=10.0.0
+geojson>=3.0.0
+shapely>=2.0.0             # Optional: falls back to ray-casting
+
+# ── HTTP ───────────────────────────────────────────────────────
+requests>=2.31.0
+
+# ── Config ─────────────────────────────────────────────────────
+python-dotenv>=1.0.0
+
+# ── AI / ML (Optional — numpy fallbacks exist if unavailable) ──
+torch>=2.0.0               # PyTorch for CNN, LSTM, MethaneEstimator
+
+# ── Vector memory (Optional — SQLite fallback exists) ──────────
+chromadb>=0.4.0            # pip install chromadb (optional)
+
+# ── PDF report generation ──────────────────────────────────────
+reportlab>=4.0.0           # Required for PDF reports
+                           # Install: pip install reportlab
