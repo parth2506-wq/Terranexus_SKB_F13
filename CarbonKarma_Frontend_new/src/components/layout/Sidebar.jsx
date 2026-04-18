@@ -5,7 +5,8 @@ import { useApp } from '../../context/AppContext'
 import clsx from 'clsx'
 import {
   LayoutDashboard, Satellite, Layers, Droplets, Flame,
-  ShieldCheck, Coins, BarChart3, Bot, FileDown, Globe, Leaf
+  ShieldCheck, Coins, BarChart3, Bot, FileDown, Globe, Leaf,
+  Sparkles
 } from 'lucide-react'
 
 const tabs = [
@@ -18,6 +19,7 @@ const tabs = [
   { id: 'credits',       icon: Coins,           key: 'credits' },
   { id: 'analytics',     icon: BarChart3,       key: 'analytics' },
   { id: 'ai',            icon: Bot,             key: 'ai' },
+  { id: 'advanced',      icon: Sparkles,        key: 'advanced' },
   { id: 'report',        icon: FileDown,        key: 'report' },
 ]
 

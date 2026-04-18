@@ -71,6 +71,13 @@ class Config:
     # Report
     REPORT_OUTPUT_DIR: str = os.getenv("REPORT_OUTPUT_DIR", "./reports")
 
+    # Ledger / audit
+    LEDGER_PATH: str = os.getenv("LEDGER_PATH", "./ledger.jsonl")
+    LEDGER_KEY_PATH: str = os.getenv("LEDGER_KEY_PATH", "./ledger.key")
+    LEDGER_SECRET_KEY: str = os.getenv("LEDGER_SECRET_KEY", "")
+    LEDGER_ADMIN_TOKEN: str = os.getenv("LEDGER_ADMIN_TOKEN", "")
+    LEDGER_DISABLED: bool = os.getenv("LEDGER_DISABLED", "false").lower() == "true"
+
     # Verification thresholds
     VERIFICATION_NDVI_MIN: float = 0.25       # min NDVI for active crop
     VERIFICATION_TEMP_MAX_C: float = 45.0

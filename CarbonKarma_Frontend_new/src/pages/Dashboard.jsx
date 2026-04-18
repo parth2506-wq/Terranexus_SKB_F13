@@ -12,6 +12,7 @@ import CreditsPanel from '../components/panels/CreditsPanel'
 import AnalyticsPanel from '../components/panels/AnalyticsPanel'
 import AIPanel from '../components/panels/AIPanel'
 import ReportPanel from '../components/panels/ReportPanel'
+import AdvancedIntelligencePanel from '../components/panels/AdvancedIntelligencePanel'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import ErrorBoundary from '../components/ui/ErrorBoundary'
 import {
@@ -28,6 +29,7 @@ const panelMap = {
   credits:      CreditsPanel,
   analytics:    AnalyticsPanel,
   ai:           AIPanel,
+  advanced:     AdvancedIntelligencePanel,
   report:       ReportPanel,
 }
 

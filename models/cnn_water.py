@@ -68,9 +68,16 @@ def run_cnn(model, vv_patch, vh_patch, device=None):
     if TORCH_AVAILABLE and model is not None:
         with torch.no_grad():
             d = device or config.MODEL_DEVICE
-            vv_t = torch.from_numpy(vv_patch.astype(np.float32)).unsqueeze(0)
-            vh_t = torch.from_numpy(vh_patch.astype(np.float32)).unsqueeze(0)
-            x = torch.stack([vv_t, vh_t], 0).unsqueeze(0).to(d)
+            
+            vv_t = torch.from_numpy(vv_patch.astype(np.float32))
+            vh_t = torch.from_numpy(vh_patch.astype(np.float32))
+            
+            # ✅ FIXED HERE
+            x = torch.cat([vv_t.unsqueeze(0), vh_t.unsqueeze(0)], dim=0).unsqueeze(0).to(d)
+            
             fv, ws = model(x)
-            return {"feature_vector": fv.squeeze(0).cpu().tolist(), "water_score": float(ws.squeeze().cpu())}
+            return {
+                "feature_vector": fv.squeeze(0).cpu().tolist(),
+                "water_score": float(ws.squeeze().cpu())
+            }
     return _numpy_cnn(vv_patch, vh_patch, config.CNN_OUT_FEATURES)

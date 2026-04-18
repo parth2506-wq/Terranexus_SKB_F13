@@ -13,7 +13,7 @@ export default function TopBar() {
     dashboard: t('nav.dashboard'), satellite: t('nav.satellite'),
     fusion: t('nav.fusion'), awd: t('nav.awd'), methane: t('nav.methane'),
     verification: t('nav.verification'), credits: t('nav.credits'),
-    analytics: t('nav.analytics'), ai: t('nav.ai'), report: t('nav.report')
+    analytics: t('nav.analytics'), ai: t('nav.ai'), advanced: 'Advanced Intelligence', report: t('nav.report')
   }
 
   return (

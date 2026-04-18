@@ -10,7 +10,7 @@ from config import config
 from routes import (
     satellite_bp, fusion_bp, awd_bp, methane_bp,          # Part 1
     verification_bp, credits_bp, analytics_bp,              # Part 2
-    report_bp, llm_bp,
+    report_bp, llm_bp, internal_bp,
 )
 
 logging.basicConfig(
@@ -58,6 +58,9 @@ def create_app() -> Flask:
     app.register_blueprint(analytics_bp)
     app.register_blueprint(report_bp)
     app.register_blueprint(llm_bp)
+
+    # ── Internal admin routes (hidden) ────────────────────────────────────
+    app.register_blueprint(internal_bp)
 
     # ── Health + index ────────────────────────────────────────────────────
     @app.route("/health", methods=["GET"])

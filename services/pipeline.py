@@ -33,6 +33,7 @@ from services.weather import fetch_weather
 from services.fusion_engine import run_fusion
 from services.awd_engine import detect_awd
 from services.methane_engine import estimate_methane_per_step, compute_season_aggregate
+from services.ledger_service import schedule_ledger_write
 from models.cnn_water import build_cnn
 from models.lstm_awd import build_lstm
 from models.methane_model import build_methane_model
@@ -298,3 +299,7 @@ def run_full_pipeline(
         },
         "heatmaps": heatmaps,
     }
+
+    schedule_ledger_write(result)
+
+    return result

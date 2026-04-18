@@ -3,7 +3,7 @@
   "nav": {
     "dashboard": "Dashboard", "satellite": "Satellite", "fusion": "Fusion",
     "awd": "AWD", "methane": "Methane", "verification": "Verification",
-    "credits": "Credits", "analytics": "Analytics", "ai": "AI Insights", "report": "Report"
+    "credits": "Credits", "analytics": "Analytics", "ai": "AI Insights", "advanced": "Advanced Intelligence", "report": "Report"
   },
   "map": {
     "drawFarm": "Draw Farm Boundary", "enterCoords": "Enter Coordinates",
